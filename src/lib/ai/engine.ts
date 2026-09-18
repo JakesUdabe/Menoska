@@ -106,6 +106,62 @@ export async function parseNlQueryWithLlm(query: string): Promise<NlParseResult>
   return coerceNl(data.candidates?.[0]?.content?.parts?.[0]?.text);
 }
 
+export type LlmComplexity = "sencilla" | "media" | "compleja";
+
+const MODEL_BY_COMPLEXITY: Record<LlmComplexity, { anthropic: string; gemini: string; maxTokens: number }> = {
+  sencilla: { anthropic: "claude-sonnet-4-5", gemini: "gemini-2.0-flash", maxTokens: 1200 },
+  media: { anthropic: "claude-sonnet-4-5", gemini: "gemini-2.0-flash", maxTokens: 2500 },
+  compleja: { anthropic: "claude-sonnet-4-5", gemini: "gemini-2.0-flash", maxTokens: 4000 },
+};
+
+export async function completeWithLlm(input: {
+  system: string;
+  user: string;
+  complexity?: LlmComplexity;
+}): Promise<string | null> {
+  const anthropic = process.env.ANTHROPIC_API_KEY;
+  const gemini = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const spec = MODEL_BY_COMPLEXITY[input.complexity ?? "media"];
+  if (!anthropic && !gemini) return null;
+
+  if (anthropic) {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": anthropic,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: spec.anthropic,
+        max_tokens: spec.maxTokens,
+        system: input.system,
+        messages: [{ role: "user", content: input.user }],
+      }),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { content?: Array<{ text?: string }> };
+    return data.content?.[0]?.text?.trim() || null;
+  }
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${spec.gemini}:generateContent?key=${gemini}`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: `${input.system}\n\n${input.user}` }] }],
+        generationConfig: { maxOutputTokens: spec.maxTokens },
+      }),
+    },
+  );
+  if (!res.ok) return null;
+  const data = (await res.json()) as {
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+  };
+  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+}
+
 function coerceNl(raw?: string): NlParseResult {
   if (!raw) return parseNlQueryFallback("");
   try {

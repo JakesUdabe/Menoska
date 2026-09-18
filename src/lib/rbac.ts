@@ -38,7 +38,6 @@ export function maxUsersPerOrg(plan: PlanType | null | undefined): number | null
   return null;
 }
 
-export function defaultAppRoute(role: AppRole | null | undefined): string {
-  if (role === "superadmin") return "/admin";
+export function defaultAppRoute(_role?: AppRole | null): string {
   return "/dashboard";
 }

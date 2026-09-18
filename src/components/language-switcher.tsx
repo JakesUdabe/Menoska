@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth-provider";
-import { Globe } from "lucide-react";
 
 export function LanguageSwitcher() {
   const { locale, setLocale } = useLocale();
@@ -35,9 +34,9 @@ export function LanguageSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" aria-label={t("nav.language")} className="gap-2">
-          <Globe className="size-4" />
-          <span className="hidden sm:inline">{LOCALE_LABELS[locale]}</span>
+        <Button variant="ghost" size="sm" aria-label={t("nav.language")} className="gap-2 font-mono text-[11px] uppercase tracking-[0.14em]">
+          <span>{locale}</span>
+          <span className="hidden font-sans text-[13px] font-medium normal-case tracking-normal sm:inline">{LOCALE_LABELS[locale]}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="max-h-80 overflow-y-auto">

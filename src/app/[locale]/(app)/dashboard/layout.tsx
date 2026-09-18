@@ -1,22 +1,30 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { FileText, LogOut, Receipt, Shield, UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  BookOpen,
+  CreditCard,
+  FileText,
+  LayoutDashboard,
+  LineChart,
+  Mail,
+  Newspaper,
+  Radio,
+  Settings,
+  Shield,
+} from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { useLocale, useT } from "@/i18n/provider";
 import { withLocale } from "@/lib/paths";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { BrandMark } from "@/components/brand-mark";
-import { Button } from "@/components/ui/button";
 import { isOrgAdmin } from "@/lib/rbac";
-import { useEffect } from "react";
+import { AppShell, PlanBadge, type ShellNavItem } from "@/components/app-shell";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading } = useAuth();
   const { locale } = useLocale();
   const t = useT();
-  const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
@@ -27,62 +35,41 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return <div className="p-8 text-sm text-muted-foreground">{t("common.loading")}</div>;
   }
 
-  const items = [
-    { href: withLocale(locale, "/dashboard"), label: t("dashboard.title"), icon: FileText },
-    { href: withLocale(locale, "/dashboard/perfil"), label: t("dashboard.profile"), icon: UserRound },
-    { href: withLocale(locale, "/dashboard/facturacion"), label: t("dashboard.billing"), icon: Receipt },
+  const items: ShellNavItem[] = [
+    { href: withLocale(locale, "/dashboard"), label: t("sidebar.dashboard"), icon: LayoutDashboard, exact: true },
+    { href: withLocale(locale, "/dashboard/boletines"), label: t("tools.bulletins"), icon: Newspaper, group: t("sidebar.tools") },
+    { href: withLocale(locale, "/dashboard/estado-del-arte"), label: t("tools.estadoArte"), icon: BookOpen, group: t("sidebar.tools") },
+    { href: withLocale(locale, "/dashboard/informe-mercado"), label: t("tools.informeMercado"), icon: LineChart, group: t("sidebar.tools") },
+    { href: withLocale(locale, "/dashboard/social-listening"), label: t("tools.socialListening"), icon: Radio, group: t("sidebar.tools") },
+    { href: withLocale(locale, "/dashboard/tutoriales"), label: t("sidebar.tutorials"), icon: FileText, group: t("sidebar.services") },
+    { href: withLocale(locale, "/dashboard/facturacion"), label: t("dashboard.billing"), icon: CreditCard, group: t("sidebar.services") },
+    { href: withLocale(locale, "/dashboard/contacto"), label: t("nav.contact"), icon: Mail, group: t("sidebar.services") },
     ...(isOrgAdmin(user.role)
-      ? [{ href: withLocale(locale, "/admin"), label: t("admin.panel"), icon: Shield }]
+      ? [{ href: withLocale(locale, "/admin"), label: t("sidebar.adminPanel"), icon: Shield, group: t("sidebar.admin") }]
       : []),
   ];
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="hidden w-60 border-r bg-card p-4 md:block">
-        <Link href={withLocale(locale, "/")} className="mb-6 flex items-center gap-2.5 font-display font-semibold tracking-tight">
-          <BrandMark /> {t("common.brand")}
+    <AppShell
+      items={items}
+      brandHref={withLocale(locale, "/dashboard")}
+      brandLabel={
+        <span>
+          ABI <span className="font-normal text-sidebar-foreground/60">News</span>
+        </span>
+      }
+      planSlot={<PlanBadge plan={user.plan} />}
+      headerExtra={
+        <Link
+          href={withLocale(locale, "/dashboard/perfil")}
+          className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+          title={t("dashboard.profile")}
+        >
+          <Settings className="size-5" />
         </Link>
-        <nav className="space-y-1" aria-label="Dashboard">
-          {items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${pathname === item.href ? "bg-accent text-signal" : "hover:bg-muted"}`}
-            >
-              <item.icon className="size-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <Button variant="ghost" className="mt-8 w-full justify-start" onClick={() => void signOut()}>
-          <LogOut className="size-4" /> {t("nav.logout")}
-        </Button>
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">{user.fullName}</p>
-            <p className="text-xs text-muted-foreground">
-              {user.organizationName} · {user.role} · {user.plan}
-            </p>
-          </div>
-          <LanguageSwitcher />
-        </header>
-        <nav className="flex gap-2 overflow-x-auto border-b px-4 py-2 md:hidden" aria-label="Dashboard mobile">
-          {items.map((item) => (
-            <Link
-              key={`m-${item.href}`}
-              href={item.href}
-              className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${pathname === item.href ? "bg-accent text-signal" : "bg-muted"}`}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
-        <main id="main" className="flex-1 p-4 sm:p-8">
-          {children}
-        </main>
-      </div>
-    </div>
+      }
+    >
+      {children}
+    </AppShell>
   );
 }

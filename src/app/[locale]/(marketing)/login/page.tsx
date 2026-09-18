@@ -9,31 +9,29 @@ import { useAuth } from "@/components/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEMO_PROFILES } from "@/lib/demo-data";
 import { defaultAppRoute } from "@/lib/rbac";
 
 export default function LoginPage() {
   const t = useT();
   const { locale } = useLocale();
-  const { signIn, demo, setDemoUser } = useAuth();
+  const { signIn, demo } = useAuth();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(formData: FormData) {
-    const email = String(formData.get("email") ?? "");
+    const identifier = String(formData.get(demo ? "username" : "email") ?? "");
     const password = String(formData.get("password") ?? "");
-    const result = await signIn(email, password);
+    const result = await signIn(identifier, password);
     if (result.error) {
-      setError(result.error);
+      setError(t(result.error));
       return;
     }
-    router.push(withLocale(locale, "/dashboard"));
+    router.push(withLocale(locale, defaultAppRoute(result.role)));
   }
 
   return (
     <div className="mesh-hero mx-auto max-w-md px-4 py-16">
       <h1 className="font-display text-3xl font-bold tracking-tight">{t("auth.loginTitle")}</h1>
-      {demo ? <p className="mt-2 text-xs text-signal">{t("common.demo")}</p> : null}
       <form
         className="mt-8 space-y-4"
         onSubmit={(e) => {
@@ -41,10 +39,17 @@ export default function LoginPage() {
           void onSubmit(new FormData(e.currentTarget));
         }}
       >
-        <div>
-          <Label htmlFor="email">{t("auth.email")}</Label>
-          <Input id="email" name="email" type="email" required autoComplete="email" />
-        </div>
+        {demo ? (
+          <div>
+            <Label htmlFor="username">{t("auth.username")}</Label>
+            <Input id="username" name="username" type="text" required autoComplete="username" />
+          </div>
+        ) : (
+          <div>
+            <Label htmlFor="email">{t("auth.email")}</Label>
+            <Input id="email" name="email" type="email" required autoComplete="email" />
+          </div>
+        )}
         <div>
           <Label htmlFor="password">{t("auth.password")}</Label>
           <Input id="password" name="password" type="password" required autoComplete="current-password" />
@@ -54,24 +59,6 @@ export default function LoginPage() {
           {t("auth.submitLogin")}
         </Button>
       </form>
-      {demo ? (
-        <div className="mt-6 space-y-2">
-          {DEMO_PROFILES.map((p) => (
-            <Button
-              key={p.id}
-              type="button"
-              variant="outline"
-              className="w-full justify-start"
-              onClick={() => {
-                setDemoUser(p);
-                router.push(withLocale(locale, defaultAppRoute(p.role)));
-              }}
-            >
-              {p.role} · {p.email}
-            </Button>
-          ))}
-        </div>
-      ) : null}
       <p className="mt-6 text-sm text-muted-foreground">
         {t("auth.noAccount")}{" "}
         <Link className="underline" href={withLocale(locale, "/registro")}>

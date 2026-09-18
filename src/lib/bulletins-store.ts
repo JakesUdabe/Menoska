@@ -1,8 +1,17 @@
+import type { BulletinSectionCriteria } from "./and-filter";
+
 export type BulletinFrequency = "daily" | "weekly" | "biweekly" | "monthly";
 export type BulletinStatus = "draft" | "active" | "paused";
+export type BulletinMode = "common" | "advanced";
 
 export type BulletinSection = {
   title: string;
+  companies: string[];
+  technologies: string[];
+};
+
+export type BulletinRecipient = {
+  email: string;
   companies: string[];
   technologies: string[];
 };
@@ -18,7 +27,8 @@ export type StoredBulletin = {
   sendDay: number | null;
   sendHour: number;
   timezone: string;
-  recipients: string[];
+  recipients: BulletinRecipient[];
+  mode: BulletinMode;
   nlQuery: string;
   sections: BulletinSection[];
   status: BulletinStatus;
@@ -40,7 +50,11 @@ const SEED: StoredBulletin[] = [
     sendDay: 1,
     sendHour: 7,
     timezone: "UTC",
-    recipients: ["comite.rd@menoska.consulting", "unai@menoska.consulting"],
+    recipients: [
+      { email: "comite.rd@menoska.consulting", companies: [], technologies: [] },
+      { email: "unai@menoska.consulting", companies: [], technologies: [] },
+    ],
+    mode: "common",
     nlQuery: "",
     sections: [
       {
@@ -64,7 +78,8 @@ const SEED: StoredBulletin[] = [
     sendDay: null,
     sendHour: 8,
     timezone: "UTC",
-    recipients: ["ip@menoska.consulting"],
+    recipients: [{ email: "ip@menoska.consulting", companies: [], technologies: [] }],
+    mode: "common",
     nlQuery:
       "Buscamos desarrollos en tecnologías de impresoras de electrónica flexible aplicados a empresas del sector automoción en Europa",
     sections: [
@@ -80,16 +95,84 @@ const SEED: StoredBulletin[] = [
   },
 ];
 
+function newId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `b-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function asRecipient(value: unknown): BulletinRecipient | null {
+  if (typeof value === "string") {
+    const email = value.trim().toLowerCase();
+    return email.includes("@") ? { email, companies: [], technologies: [] } : null;
+  }
+  if (!value || typeof value !== "object") return null;
+  const row = value as { email?: unknown; companies?: unknown; technologies?: unknown };
+  const email = String(row.email ?? "")
+    .trim()
+    .toLowerCase();
+  if (!email.includes("@")) return null;
+  return {
+    email,
+    companies: asStringArray(row.companies),
+    technologies: asStringArray(row.technologies),
+  };
+}
+
+export function defaultSection(index = 1): BulletinSection {
+  return { title: `Sección ${index}`, companies: [], technologies: [] };
+}
+
+export function normalizeBulletin(raw: Partial<StoredBulletin> & { recipients?: unknown }): StoredBulletin {
+  const recipients = Array.isArray(raw.recipients)
+    ? raw.recipients.map(asRecipient).filter((row): row is BulletinRecipient => Boolean(row))
+    : [];
+  const sections = Array.isArray(raw.sections) && raw.sections.length > 0
+    ? raw.sections.map((section, idx) => ({
+        title: section?.title?.trim() || `Sección ${idx + 1}`,
+        companies: asStringArray(section?.companies),
+        technologies: asStringArray(section?.technologies),
+      }))
+    : [defaultSection()];
+
+  return {
+    id: raw.id || newId(),
+    createdBy: raw.createdBy || "unknown",
+    organizationId: raw.organizationId || "org-unknown",
+    name: raw.name ?? "",
+    subject: raw.subject ?? "",
+    language: raw.language || "es",
+    frequency: raw.frequency === "daily" || raw.frequency === "biweekly" || raw.frequency === "monthly" ? raw.frequency : "weekly",
+    sendDay: typeof raw.sendDay === "number" ? raw.sendDay : 1,
+    sendHour: typeof raw.sendHour === "number" && Number.isFinite(raw.sendHour) ? raw.sendHour : 7,
+    timezone: raw.timezone || "UTC",
+    recipients,
+    mode: raw.mode === "advanced" ? "advanced" : "common",
+    nlQuery: raw.nlQuery ?? "",
+    sections,
+    status: raw.status === "active" || raw.status === "paused" ? raw.status : "draft",
+    createdAt: raw.createdAt || new Date().toISOString(),
+    updatedAt: raw.updatedAt || new Date().toISOString(),
+  };
+}
+
 function readAll(): StoredBulletin[] {
   if (typeof window === "undefined") return SEED;
   try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) {
+    const stored = localStorage.getItem(KEY);
+    if (!stored) {
       localStorage.setItem(KEY, JSON.stringify(SEED));
       return SEED;
     }
-    const parsed = JSON.parse(raw) as StoredBulletin[];
-    return Array.isArray(parsed) ? parsed : SEED;
+    const parsed = JSON.parse(stored) as unknown;
+    if (!Array.isArray(parsed)) return SEED;
+    return parsed.map((item) => normalizeBulletin(item as Partial<StoredBulletin>));
   } catch {
     return SEED;
   }
@@ -111,7 +194,7 @@ export function getBulletin(id: string): StoredBulletin | undefined {
 
 export function saveBulletin(input: StoredBulletin): StoredBulletin {
   const all = readAll();
-  const next = { ...input, updatedAt: new Date().toISOString() };
+  const next = normalizeBulletin({ ...input, updatedAt: new Date().toISOString() });
   const idx = all.findIndex((b) => b.id === next.id);
   if (idx >= 0) all[idx] = next;
   else all.unshift(next);
@@ -128,22 +211,44 @@ export function countActiveBulletins(userId: string): number {
 }
 
 export function emptyBulletin(userId: string, organizationId: string, locale: string): StoredBulletin {
+  const now = new Date().toISOString();
   return {
-    id: crypto.randomUUID(),
+    id: newId(),
     createdBy: userId,
     organizationId,
     name: "",
     subject: "",
-    language: locale,
+    language: locale || "es",
     frequency: "weekly",
     sendDay: 1,
     sendHour: 7,
     timezone: "UTC",
     recipients: [],
+    mode: "common",
     nlQuery: "",
-    sections: [{ title: "Sección 1", companies: [], technologies: [] }],
+    sections: [defaultSection()],
     status: "draft",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+export function commonCriteria(bulletin: Pick<StoredBulletin, "sections">): BulletinSectionCriteria {
+  return {
+    companies: bulletin.sections.flatMap((section) => section.companies),
+    competitors: [],
+    technologies: bulletin.sections.flatMap((section) => section.technologies),
+  };
+}
+
+export function criteriaForRecipient(bulletin: StoredBulletin, email?: string): BulletinSectionCriteria {
+  const defaults = commonCriteria(bulletin);
+  if (bulletin.mode !== "advanced" || !email) return defaults;
+  const recipient = bulletin.recipients.find((row) => row.email === email);
+  if (!recipient) return defaults;
+  return {
+    companies: recipient.companies.length ? recipient.companies : defaults.companies,
+    competitors: [],
+    technologies: recipient.technologies.length ? recipient.technologies : defaults.technologies,
   };
 }

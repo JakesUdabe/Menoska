@@ -6,7 +6,6 @@ import { Menu, X } from "lucide-react";
 import { useT, useLocale } from "@/i18n/provider";
 import { withLocale } from "@/lib/paths";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth-provider";
 
@@ -25,15 +24,14 @@ export function SiteHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 border-b border-primary/10 bg-background/75 backdrop-blur-xl">
+    <header className="sticky top-0 z-[100] isolate border-b border-border bg-background">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href={href("/")} className="flex items-center gap-2.5 font-display text-lg font-semibold tracking-tight">
-          <BrandMark />
-          <span>{t("common.brand")}</span>
+        <Link href={href("/")} className="text-[15px] font-semibold tracking-tight">
+          {t("common.brand")}
         </Link>
         <nav className="hidden items-center gap-6 md:flex" aria-label="Primary">
           {links.map((l) => (
-            <Link key={l.href} href={l.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
+            <Link key={l.href} href={l.href} className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground">
               {l.label}
             </Link>
           ))}

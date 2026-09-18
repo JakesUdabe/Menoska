@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import "./globals.css";
 
-const sans = Plus_Jakarta_Sans({
+const sans = IBM_Plex_Sans({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-plus-jakarta",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ibm-sans",
   display: "swap",
 });
 
-const display = Fraunces({
+const mono = IBM_Plex_Mono({
   subsets: ["latin", "latin-ext"],
-  variable: "--font-fraunces",
+  weight: ["400", "500", "600"],
+  variable: "--font-ibm-mono",
   display: "swap",
 });
 
@@ -25,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${sans.variable} ${display.variable}`} suppressHydrationWarning>
+    <html lang="es" className={`${sans.variable} ${mono.variable}`} suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased">{children}</body>
     </html>
   );

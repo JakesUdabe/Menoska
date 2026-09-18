@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { DEMO_PROFILES, type DemoProfile } from "@/lib/demo-data";
+import { DEMO_LOGIN_ACCOUNTS, DEMO_PROFILES, type DemoProfile } from "@/lib/demo-data";
 import { isSupabaseConfigured, createClient } from "@/lib/supabase/client";
 import type { AppRole, PlanType } from "@/lib/rbac";
 
@@ -23,7 +23,7 @@ type AuthContextValue = {
   user: SessionUser | null;
   loading: boolean;
   demo: boolean;
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
+  signIn: (identifier: string, password: string) => Promise<{ error?: string; role?: AppRole }>;
   signUp: (input: {
     email: string;
     password: string;
@@ -140,15 +140,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signIn = useCallback(
-    async (email: string, password: string) => {
+    async (identifier: string, password: string) => {
       if (demo) {
-        const found = DEMO_PROFILES.find((p) => p.email.toLowerCase() === email.trim().toLowerCase());
-        if (!found || password.length < 6) return { error: "Credenciales no válidas (demo: usa un email de demostración)." };
-        setDemoUser(found);
-        return {};
+        const username = identifier.trim();
+        const account = DEMO_LOGIN_ACCOUNTS.find(
+          (entry) => entry.username === username && entry.password === password,
+        );
+        const profile = account ? DEMO_PROFILES.find((p) => p.id === account.profileId) : undefined;
+        if (!profile) return { error: "auth.invalidCredentials" };
+        setDemoUser(profile);
+        return { role: profile.role };
       }
       const supabase = createClient();
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ email: identifier, password });
       return error ? { error: error.message } : {};
     },
     [demo, setDemoUser],

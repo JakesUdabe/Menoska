@@ -15,6 +15,12 @@ export type DemoProfile = {
   plan: PlanType;
 };
 
+export const DEMO_LOGIN_ACCOUNTS = [
+  { username: "1234", password: "1234", profileId: "user-client" },
+  { username: "1234a", password: "1234a", profileId: "user-superadmin" },
+  { username: "1234b", password: "1234b", profileId: "user-admin" },
+] as const;
+
 export const DEMO_PROFILES: DemoProfile[] = [
   {
     id: "user-superadmin",
@@ -112,33 +118,6 @@ export const DEMO_CANDIDATES: CandidateItem[] = [
     publishedAt: "2026-09-09",
     company: "LG Display",
     ipc: "H10K59/10",
-  },
-];
-
-export const MENOSKA_PROJECTS = [
-  {
-    id: "menoska-memo-draft",
-    name: "Memorias técnicas",
-    status: "active" as const,
-    trl: 6,
-    category: "process",
-    short: "Redacción y revisión de memorias técnicas de I+D+i.",
-  },
-  {
-    id: "biotech-asset-alpha",
-    name: "BioTech Asset Alpha",
-    status: "finished" as const,
-    trl: 7,
-    category: "biotech",
-    short: "Activo biotecnológico transferido bajo NDA tras valorización.",
-  },
-  {
-    id: "cleanstream-tech",
-    name: "CleanStream Tech",
-    status: "active" as const,
-    trl: 5,
-    category: "cleantech",
-    short: "Tratamiento de efluentes industriales de baja huella energética.",
   },
 ];
 

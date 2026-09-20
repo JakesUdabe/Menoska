@@ -31,6 +31,7 @@ export type StoredBulletin = {
   mode: BulletinMode;
   nlQuery: string;
   sections: BulletinSection[];
+  maxItems: number;
   status: BulletinStatus;
   createdAt: string;
   updatedAt: string;
@@ -63,6 +64,7 @@ const SEED: StoredBulletin[] = [
         technologies: ["flexible electronics", "automotive"],
       },
     ],
+    maxItems: 10,
     status: "active",
     createdAt: "2026-09-01T08:00:00.000Z",
     updatedAt: "2026-09-10T08:00:00.000Z",
@@ -89,6 +91,7 @@ const SEED: StoredBulletin[] = [
         technologies: ["printed electronics", "OLED", "flexible"],
       },
     ],
+    maxItems: 10,
     status: "draft",
     createdAt: "2026-09-05T08:00:00.000Z",
     updatedAt: "2026-09-12T08:00:00.000Z",
@@ -129,17 +132,56 @@ export function defaultSection(index = 1): BulletinSection {
   return { title: `Sección ${index}`, companies: [], technologies: [] };
 }
 
+function uniqueLabels(values: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    const key = trimmed.toLowerCase();
+    if (!trimmed || seen.has(key)) continue;
+    seen.add(key);
+    out.push(trimmed);
+  }
+  return out;
+}
+
+export function bulletinPool(bulletin: Pick<StoredBulletin, "sections">): BulletinSection {
+  const first = bulletin.sections[0] ?? defaultSection();
+  return {
+    title: first.title,
+    companies: uniqueLabels(bulletin.sections.flatMap((section) => asStringArray(section?.companies))),
+    technologies: uniqueLabels(bulletin.sections.flatMap((section) => asStringArray(section?.technologies))),
+  };
+}
+
+function clampInt(value: unknown, fallback: number, min: number, max: number): number {
+  const n = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(n)));
+}
+
 export function normalizeBulletin(raw: Partial<StoredBulletin> & { recipients?: unknown }): StoredBulletin {
-  const recipients = Array.isArray(raw.recipients)
+  const sections = Array.isArray(raw.sections) && raw.sections.length > 0
+    ? [bulletinPool({ sections: raw.sections })]
+    : [defaultSection()];
+  const pool = sections[0];
+  const mode: BulletinMode = raw.mode === "advanced" ? "advanced" : "common";
+  const parsedRecipients = Array.isArray(raw.recipients)
     ? raw.recipients.map(asRecipient).filter((row): row is BulletinRecipient => Boolean(row))
     : [];
-  const sections = Array.isArray(raw.sections) && raw.sections.length > 0
-    ? raw.sections.map((section, idx) => ({
-        title: section?.title?.trim() || `Sección ${idx + 1}`,
-        companies: asStringArray(section?.companies),
-        technologies: asStringArray(section?.technologies),
-      }))
-    : [defaultSection()];
+  const inheritAll =
+    mode === "advanced" &&
+    parsedRecipients.length > 0 &&
+    parsedRecipients.every((row) => row.companies.length === 0 && row.technologies.length === 0);
+  const recipients = parsedRecipients.map((row) => {
+    if (mode !== "advanced") return { ...row, companies: [], technologies: [] };
+    if (inheritAll) return { ...row, companies: [...pool.companies], technologies: [...pool.technologies] };
+    return {
+      ...row,
+      companies: uniqueLabels(row.companies).filter((item) => pool.companies.includes(item)),
+      technologies: uniqueLabels(row.technologies).filter((item) => pool.technologies.includes(item)),
+    };
+  });
 
   return {
     id: raw.id || newId(),
@@ -150,12 +192,13 @@ export function normalizeBulletin(raw: Partial<StoredBulletin> & { recipients?: 
     language: raw.language || "es",
     frequency: raw.frequency === "daily" || raw.frequency === "biweekly" || raw.frequency === "monthly" ? raw.frequency : "weekly",
     sendDay: typeof raw.sendDay === "number" ? raw.sendDay : 1,
-    sendHour: typeof raw.sendHour === "number" && Number.isFinite(raw.sendHour) ? raw.sendHour : 7,
+    sendHour: clampInt(raw.sendHour, 7, 0, 23),
     timezone: raw.timezone || "UTC",
     recipients,
-    mode: raw.mode === "advanced" ? "advanced" : "common",
+    mode,
     nlQuery: raw.nlQuery ?? "",
     sections,
+    maxItems: clampInt(raw.maxItems, 10, 1, 50),
     status: raw.status === "active" || raw.status === "paused" ? raw.status : "draft",
     createdAt: raw.createdAt || new Date().toISOString(),
     updatedAt: raw.updatedAt || new Date().toISOString(),
@@ -227,6 +270,7 @@ export function emptyBulletin(userId: string, organizationId: string, locale: st
     mode: "common",
     nlQuery: "",
     sections: [defaultSection()],
+    maxItems: 10,
     status: "draft",
     createdAt: now,
     updatedAt: now,
@@ -247,8 +291,8 @@ export function criteriaForRecipient(bulletin: StoredBulletin, email?: string): 
   const recipient = bulletin.recipients.find((row) => row.email === email);
   if (!recipient) return defaults;
   return {
-    companies: recipient.companies.length ? recipient.companies : defaults.companies,
+    companies: recipient.companies,
     competitors: [],
-    technologies: recipient.technologies.length ? recipient.technologies : defaults.technologies,
+    technologies: recipient.technologies,
   };
 }

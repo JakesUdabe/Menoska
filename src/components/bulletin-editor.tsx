@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useT } from "@/i18n/provider";
 import { LOCALES } from "@/i18n/locales";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DEMO_CANDIDATES } from "@/lib/demo-data";
@@ -17,6 +18,7 @@ import { filterByAndLogic } from "@/lib/and-filter";
 import { canUseNaturalLanguage, canUsePatents } from "@/lib/rbac";
 import { useAuth } from "@/components/auth-provider";
 import {
+  bulletinPool,
   criteriaForRecipient,
   defaultSection,
   deleteBulletin,
@@ -30,49 +32,132 @@ import { toast } from "sonner";
 import { withLocale } from "@/lib/paths";
 import { useLocale } from "@/i18n/provider";
 
-function csv(value: string): string[] {
-  return value
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
-function CsvField({
-  value,
-  onChange,
-  placeholder,
-  className,
-}: {
-  value: string[];
-  onChange: (next: string[]) => void;
-  placeholder?: string;
-  className?: string;
-}) {
-  const [text, setText] = useState(value.join(", "));
-  const serialized = value.join("\u0001");
-
-  useEffect(() => {
-    setText(serialized.split("\u0001").filter(Boolean).join(", "));
-  }, [serialized]);
-
-  return (
-    <Input
-      className={className}
-      value={text}
-      placeholder={placeholder}
-      onChange={(e) => {
-        setText(e.target.value);
-        onChange(csv(e.target.value));
-      }}
-    />
-  );
+function uniqueLabels(values: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const value of values) {
+    const trimmed = value.trim();
+    const key = trimmed.toLowerCase();
+    if (!trimmed || seen.has(key)) continue;
+    seen.add(key);
+    out.push(trimmed);
+  }
+  return out;
 }
 
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-const WEEKDAYS = ["1", "2", "3", "4", "5", "6", "7"];
+function ChipList({
+  values,
+  onChange,
+  placeholder,
+  hint,
+  validate,
+  removeLabel,
+}: {
+  values: string[];
+  onChange: (next: string[]) => void;
+  placeholder?: string;
+  hint?: string;
+  validate?: (raw: string) => string | null;
+  removeLabel?: string;
+}) {
+  const [text, setText] = useState("");
+
+  function commit(raw: string) {
+    const parts = raw
+      .split(/[,;\n]+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+    if (!parts.length) return;
+    const next = [...values];
+    for (const part of parts) {
+      const normalized = validate ? validate(part) : part.trim();
+      if (!normalized) continue;
+      if (!next.some((item) => item.toLowerCase() === normalized.toLowerCase())) next.push(normalized);
+    }
+    onChange(next);
+    setText("");
+  }
+
+  return (
+    <div>
+      <div className="flex min-h-10 flex-wrap items-center gap-1.5 rounded-md border border-input bg-transparent px-2 py-1.5 focus-within:ring-1 focus-within:ring-ring">
+        {values.map((value) => (
+          <span
+            key={value}
+            className="inline-flex items-center gap-1 rounded-md border bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground"
+          >
+            {value}
+            <button
+              type="button"
+              className="rounded-sm opacity-70 hover:opacity-100"
+              aria-label={removeLabel ? `${removeLabel} ${value}` : value}
+              onClick={() => onChange(values.filter((item) => item !== value))}
+            >
+              <X className="size-3" />
+            </button>
+          </span>
+        ))}
+        <input
+          className="min-w-[10rem] flex-1 bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground"
+          value={text}
+          placeholder={values.length ? "" : placeholder}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              commit(text);
+            }
+            if (e.key === "Backspace" && !text && values.length) {
+              onChange(values.slice(0, -1));
+            }
+          }}
+          onBlur={() => {
+            if (text.trim()) commit(text);
+          }}
+        />
+      </div>
+      {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
+    </div>
+  );
+}
+
+function NumberField({
+  id,
+  label,
+  value,
+  onChange,
+  min,
+  max,
+}: {
+  id: string;
+  label: string;
+  value: number;
+  onChange: (next: number) => void;
+  min: number;
+  max: number;
+}) {
+  return (
+    <div>
+      <Label htmlFor={id}>{label}</Label>
+      <Input
+        id={id}
+        type="number"
+        min={min}
+        max={max}
+        value={Number.isFinite(value) ? value : ""}
+        onChange={(e) => {
+          const next = Number(e.target.value);
+          if (!Number.isFinite(next)) return;
+          onChange(Math.min(max, Math.max(min, Math.round(next))));
+        }}
+      />
+    </div>
+  );
+}
 
 export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
   const t = useT();
@@ -80,13 +165,13 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
   const router = useRouter();
   const { user } = useAuth();
   const [draft, setDraft] = useState<StoredBulletin>(() => normalizeBulletin(initial));
-  const [recipientDraft, setRecipientDraft] = useState("");
   const [previewEmail, setPreviewEmail] = useState(() => normalizeBulletin(initial).recipients[0]?.email ?? "");
 
   const allowNl = canUseNaturalLanguage(user?.plan);
   const allowPatents = canUsePatents(user?.plan);
   const nlOk = (draft.nlQuery ?? "").trim().split(/\s+/).filter(Boolean).length >= 15;
   const isNew = !initial.name;
+  const pool = useMemo(() => bulletinPool(draft), [draft]);
 
   const preview = useMemo(() => {
     const criteria = criteriaForRecipient(draft, draft.mode === "advanced" ? previewEmail : undefined);
@@ -99,22 +184,67 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
     setDraft((current) => ({ ...current, ...next }));
   }
 
-  function addRecipient(emailRaw = recipientDraft) {
-    const email = emailRaw.trim().toLowerCase();
-    if (!isEmail(email)) {
-      if (emailRaw.trim()) toast.error(t("contact.validation"));
-      return;
-    }
-    if (draft.recipients.some((row) => row.email === email)) return;
-    const next: BulletinRecipient = { email, companies: [], technologies: [] };
-    patch({ recipients: [...draft.recipients, next] });
-    setRecipientDraft("");
-    if (!previewEmail) setPreviewEmail(email);
+  function setPool(next: { companies?: string[]; technologies?: string[] }) {
+    setDraft((current) => {
+      const currentPool = bulletinPool(current);
+      const companies = uniqueLabels(next.companies ?? currentPool.companies);
+      const technologies = uniqueLabels(next.technologies ?? currentPool.technologies);
+      const first = current.sections[0] ?? defaultSection();
+      const addedCompanies = companies.filter((item) => !currentPool.companies.includes(item));
+      const removedCompanies = currentPool.companies.filter((item) => !companies.includes(item));
+      const addedTechnologies = technologies.filter((item) => !currentPool.technologies.includes(item));
+      const removedTechnologies = currentPool.technologies.filter((item) => !technologies.includes(item));
+      const recipients =
+        current.mode === "advanced"
+          ? current.recipients.map((row) => ({
+              ...row,
+              companies: uniqueLabels([...row.companies.filter((item) => !removedCompanies.includes(item)), ...addedCompanies]),
+              technologies: uniqueLabels([
+                ...row.technologies.filter((item) => !removedTechnologies.includes(item)),
+                ...addedTechnologies,
+              ]),
+            }))
+          : current.recipients;
+      return { ...current, sections: [{ ...first, companies, technologies }], recipients };
+    });
+  }
+
+  function setRecipientEmails(emails: string[]) {
+    const uniqueEmails = uniqueLabels(emails.map((email) => email.toLowerCase())).filter(isEmail);
+    setDraft((current) => {
+      const currentPool = bulletinPool(current);
+      const byEmail = new Map(current.recipients.map((row) => [row.email, row]));
+      const recipients = uniqueEmails.map((email) => {
+        const existing = byEmail.get(email);
+        if (existing) return existing;
+        return current.mode === "advanced"
+          ? { email, companies: [...currentPool.companies], technologies: [...currentPool.technologies] }
+          : { email, companies: [], technologies: [] };
+      });
+      return { ...current, recipients };
+    });
+    if (previewEmail && !uniqueEmails.includes(previewEmail)) setPreviewEmail(uniqueEmails[0] ?? "");
+    if (!previewEmail && uniqueEmails[0]) setPreviewEmail(uniqueEmails[0]);
   }
 
   function updateRecipient(email: string, patchRow: Partial<BulletinRecipient>) {
     patch({
       recipients: draft.recipients.map((row) => (row.email === email ? { ...row, ...patchRow } : row)),
+    });
+  }
+
+  function toggleRecipientItem(email: string, kind: "companies" | "technologies", value: string) {
+    const row = draft.recipients.find((item) => item.email === email);
+    if (!row) return;
+    const current = row[kind];
+    const next = current.includes(value) ? current.filter((item) => item !== value) : [...current, value];
+    updateRecipient(email, { [kind]: next });
+  }
+
+  function setRecipientAll(email: string, selected: boolean) {
+    updateRecipient(email, {
+      companies: selected ? [...pool.companies] : [],
+      technologies: selected ? [...pool.technologies] : [],
     });
   }
 
@@ -125,8 +255,24 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
   }
 
   function setMode(mode: BulletinMode) {
-    patch({ mode });
-    if (mode === "advanced" && !previewEmail) setPreviewEmail(draft.recipients[0]?.email ?? "");
+    if (mode === "advanced") {
+      patch({
+        mode,
+        recipients: draft.recipients.map((row) => ({
+          ...row,
+          companies: row.companies.length ? row.companies.filter((item) => pool.companies.includes(item)) : [...pool.companies],
+          technologies: row.technologies.length
+            ? row.technologies.filter((item) => pool.technologies.includes(item))
+            : [...pool.technologies],
+        })),
+      });
+      if (!previewEmail) setPreviewEmail(draft.recipients[0]?.email ?? "");
+      return;
+    }
+    patch({
+      mode,
+      recipients: draft.recipients.map((row) => ({ ...row, companies: [], technologies: [] })),
+    });
   }
 
   async function parseNl() {
@@ -140,16 +286,9 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
       body: JSON.stringify({ query: draft.nlQuery }),
     });
     const data = (await res.json()) as { companies?: string[]; technologies?: string[] };
-    const first = draft.sections[0] ?? defaultSection();
-    patch({
-      sections: [
-        {
-          ...first,
-          companies: data.companies?.length ? data.companies : first.companies,
-          technologies: data.technologies?.length ? data.technologies : first.technologies,
-        },
-        ...draft.sections.slice(1),
-      ],
+    setPool({
+      companies: data.companies?.length ? uniqueLabels([...pool.companies, ...data.companies]) : pool.companies,
+      technologies: data.technologies?.length ? uniqueLabels([...pool.technologies, ...data.technologies]) : pool.technologies,
     });
   }
 
@@ -166,6 +305,8 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
     toast.success(t("bulletin.saved"));
     router.push(withLocale(locale, "/dashboard/boletines"));
   }
+
+  const matrixReady = pool.companies.length + pool.technologies.length > 0;
 
   return (
     <div className="mx-auto max-w-5xl space-y-8">
@@ -216,40 +357,38 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
           </select>
         </div>
         {draft.frequency === "weekly" ? (
-          <div>
-            <Label htmlFor="bulletin-send-day">{t("bulletin.sendDay")}</Label>
-            <select
-              id="bulletin-send-day"
-              className="flex h-9 w-full rounded-md border bg-transparent px-3 text-sm"
-              value={String(draft.sendDay ?? 1)}
-              onChange={(e) => patch({ sendDay: Number(e.target.value) })}
-            >
-              {WEEKDAYS.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
-        <div>
-          <Label htmlFor="bulletin-send-hour">{t("bulletin.sendHour")}</Label>
-          <Input
-            id="bulletin-send-hour"
-            type="number"
-            min={0}
-            max={23}
-            value={draft.sendHour}
-            onChange={(e) => patch({ sendHour: Number(e.target.value) })}
+          <NumberField
+            id="bulletin-send-day"
+            label={t("bulletin.sendDay")}
+            value={draft.sendDay ?? 1}
+            min={1}
+            max={7}
+            onChange={(sendDay) => patch({ sendDay })}
           />
-        </div>
+        ) : null}
+        <NumberField
+          id="bulletin-send-hour"
+          label={t("bulletin.sendHour")}
+          value={draft.sendHour}
+          min={0}
+          max={23}
+          onChange={(sendHour) => patch({ sendHour })}
+        />
+        <NumberField
+          id="bulletin-max-items"
+          label={t("bulletin.maxItems")}
+          value={draft.maxItems}
+          min={1}
+          max={50}
+          onChange={(maxItems) => patch({ maxItems })}
+        />
         <div>
           <Label htmlFor="bulletin-timezone">{t("bulletin.timezone")}</Label>
           <Input id="bulletin-timezone" value={draft.timezone} onChange={(e) => patch({ timezone: e.target.value })} />
         </div>
       </div>
 
-      <section className="space-y-4 rounded-xl border bg-card p-4">
+      <section className="space-y-5 rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="font-semibold">{t("bulletin.configMode")}</h2>
@@ -267,39 +406,44 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
 
         <div>
           <Label>{t("bulletin.recipients")}</Label>
-          {draft.mode === "common" ? (
-            <>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {draft.recipients.map((row) => (
-                  <Badge key={row.email} variant="secondary" className="gap-1">
-                    {row.email}
-                    <button type="button" aria-label={t("bulletin.removeRecipient")} onClick={() => removeRecipient(row.email)}>
-                      <X className="size-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-              <div className="mt-2 flex gap-2">
-                <Input
-                  type="email"
-                  value={recipientDraft}
-                  onChange={(e) => setRecipientDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addRecipient();
-                    }
-                  }}
-                  placeholder="nina.v@example.com"
-                />
-                <Button type="button" variant="outline" onClick={() => addRecipient()}>
-                  {t("bulletin.addRecipient")}
-                </Button>
-              </div>
-            </>
-          ) : (
-            <p className="mt-1 text-xs text-muted-foreground">{t("bulletin.advancedTableHint")}</p>
-          )}
+          <ChipList
+            values={draft.recipients.map((row) => row.email)}
+            onChange={setRecipientEmails}
+            placeholder="nina.v@example.com"
+            hint={t("bulletin.chipHint")}
+            removeLabel={t("bulletin.removeRecipient")}
+            validate={(raw) => {
+              const email = raw.trim().toLowerCase();
+              if (!isEmail(email)) {
+                toast.error(t("contact.validation"));
+                return null;
+              }
+              return email;
+            }}
+          />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <Label>{t("bulletin.companies")}</Label>
+            <ChipList
+              values={pool.companies}
+              onChange={(companies) => setPool({ companies })}
+              placeholder="Bosch"
+              hint={t("bulletin.chipHint")}
+              removeLabel={t("common.delete")}
+            />
+          </div>
+          <div>
+            <Label>{t("bulletin.keywords")}</Label>
+            <ChipList
+              values={pool.technologies}
+              onChange={(technologies) => setPool({ technologies })}
+              placeholder="OLED"
+              hint={t("bulletin.chipHint")}
+              removeLabel={t("common.delete")}
+            />
+          </div>
         </div>
 
         {allowNl ? (
@@ -308,128 +452,102 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
             <p className="mb-2 text-xs text-muted-foreground">
               {t("bulletin.nlOption")} · {t("bulletin.nlHint")}
             </p>
-            <Textarea id="bulletin-nl" rows={4} value={draft.nlQuery} onChange={(e) => patch({ nlQuery: e.target.value })} />
+            <Textarea id="bulletin-nl" rows={3} value={draft.nlQuery} onChange={(e) => patch({ nlQuery: e.target.value })} />
             <Button type="button" className="mt-3" variant="outline" onClick={() => void parseNl()}>
               {t("bulletin.parseNl")}
             </Button>
           </div>
         ) : null}
 
-        <div>
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div>
-              <h3 className="font-medium">{t("bulletin.matrix")}</h3>
-              <p className="text-xs text-muted-foreground">
-                {draft.mode === "advanced" ? t("bulletin.defaultsForEmpty") : t("bulletin.commonFilterLead")}
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => patch({ sections: [...draft.sections, defaultSection(draft.sections.length + 1)] })}
-            >
-              <Plus className="size-3.5" /> {t("bulletin.addSection")}
-            </Button>
-          </div>
-          <div className="space-y-4">
-            {draft.sections.map((section, idx) => (
-              <div key={idx} className="rounded-lg border p-4">
-                <Input
-                  className="mb-3"
-                  value={section.title}
-                  onChange={(e) => {
-                    const sections = [...draft.sections];
-                    sections[idx] = { ...section, title: e.target.value };
-                    patch({ sections });
-                  }}
-                />
-                <Label>{t("bulletin.companies")}</Label>
-                <CsvField
-                  className="mb-2"
-                  value={section.companies}
-                  onChange={(companies) => {
-                    const sections = [...draft.sections];
-                    sections[idx] = { ...section, companies };
-                    patch({ sections });
-                  }}
-                  placeholder="Bosch, Continental"
-                />
-                <Label>{t("bulletin.technologies")}</Label>
-                <CsvField
-                  value={section.technologies}
-                  onChange={(technologies) => {
-                    const sections = [...draft.sections];
-                    sections[idx] = { ...section, technologies };
-                    patch({ sections });
-                  }}
-                  placeholder="printed electronics, OLED"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
         {draft.mode === "advanced" ? (
           <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
               <h3 className="font-medium">{t("bulletin.advancedTable")}</h3>
-              <div className="flex gap-2">
-                <Input
-                  type="email"
-                  className="w-56"
-                  value={recipientDraft}
-                  onChange={(e) => setRecipientDraft(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addRecipient();
-                    }
-                  }}
-                  placeholder="nina.v@example.com"
-                />
-                <Button type="button" variant="outline" size="sm" onClick={() => addRecipient()}>
-                  {t("bulletin.addRecipient")}
-                </Button>
-              </div>
+              <p className="text-xs text-muted-foreground">{t("bulletin.advancedTableHint")}</p>
             </div>
             {draft.recipients.length === 0 ? (
               <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">{t("bulletin.noRecipientsAdvanced")}</p>
+            ) : !matrixReady ? (
+              <p className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">{t("bulletin.matrixEmptyPool")}</p>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>{t("bulletin.recipientEmail")}</TableHead>
-                    <TableHead>{t("bulletin.companies")}</TableHead>
-                    <TableHead>{t("bulletin.technologies")}</TableHead>
-                    <TableHead className="w-10" />
+                    <TableHead className="sticky left-0 z-10 min-w-48 bg-card">{t("bulletin.recipientEmail")}</TableHead>
+                    {pool.companies.length ? (
+                      <TableHead colSpan={pool.companies.length} className="text-center">
+                        {t("bulletin.companies")}
+                      </TableHead>
+                    ) : null}
+                    {pool.technologies.length ? (
+                      <TableHead colSpan={pool.technologies.length} className="text-center">
+                        {t("bulletin.keywords")}
+                      </TableHead>
+                    ) : null}
+                    <TableHead className="w-24" />
+                  </TableRow>
+                  <TableRow>
+                    <TableHead className="sticky left-0 z-10 bg-card" />
+                    {pool.companies.map((item) => (
+                      <TableHead key={`c-${item}`} className="max-w-28 px-2 text-center font-normal">
+                        <span className="line-clamp-2 text-xs">{item}</span>
+                      </TableHead>
+                    ))}
+                    {pool.technologies.map((item) => (
+                      <TableHead key={`k-${item}`} className="max-w-28 px-2 text-center font-normal">
+                        <span className="line-clamp-2 text-xs">{item}</span>
+                      </TableHead>
+                    ))}
+                    <TableHead />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {draft.recipients.map((row) => (
-                    <TableRow key={row.email}>
-                      <TableCell className="align-top font-medium">{row.email}</TableCell>
-                      <TableCell>
-                        <CsvField
-                          value={row.companies}
-                          onChange={(companies) => updateRecipient(row.email, { companies })}
-                          placeholder={t("bulletin.inheritDefaults")}
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <CsvField
-                          value={row.technologies}
-                          onChange={(technologies) => updateRecipient(row.email, { technologies })}
-                          placeholder={t("bulletin.inheritDefaults")}
-                        />
-                      </TableCell>
-                      <TableCell className="align-top">
-                        <Button type="button" variant="ghost" size="icon" aria-label={t("bulletin.removeRecipient")} onClick={() => removeRecipient(row.email)}>
-                          <X className="size-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {draft.recipients.map((row) => {
+                    const selectedCount = row.companies.length + row.technologies.length;
+                    const totalCount = pool.companies.length + pool.technologies.length;
+                    return (
+                      <TableRow key={row.email}>
+                        <TableCell className="sticky left-0 z-10 bg-card font-medium">{row.email}</TableCell>
+                        {pool.companies.map((item) => (
+                          <TableCell key={`${row.email}-c-${item}`} className="text-center">
+                            <Checkbox
+                              checked={row.companies.includes(item)}
+                              onCheckedChange={() => toggleRecipientItem(row.email, "companies", item)}
+                              aria-label={`${row.email} ${item}`}
+                            />
+                          </TableCell>
+                        ))}
+                        {pool.technologies.map((item) => (
+                          <TableCell key={`${row.email}-k-${item}`} className="text-center">
+                            <Checkbox
+                              checked={row.technologies.includes(item)}
+                              onCheckedChange={() => toggleRecipientItem(row.email, "technologies", item)}
+                              aria-label={`${row.email} ${item}`}
+                            />
+                          </TableCell>
+                        ))}
+                        <TableCell className="whitespace-nowrap">
+                          <button
+                            type="button"
+                            className="text-xs text-muted-foreground underline-offset-2 hover:underline"
+                            onClick={() => setRecipientAll(row.email, selectedCount < totalCount)}
+                          >
+                            {selectedCount < totalCount ? t("bulletin.selectAll") : t("bulletin.selectNone")}
+                          </button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="ml-1"
+                            aria-label={t("bulletin.removeRecipient")}
+                            onClick={() => removeRecipient(row.email)}
+                          >
+                            <X className="size-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}

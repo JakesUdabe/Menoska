@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  Bell,
-  BookOpen,
-  CheckCircle2,
-  FileText,
-  Lightbulb,
-  LineChart,
-  List,
-  Radio,
-  Search,
-  Target,
-} from "lucide-react";
+import { Bell, BookOpen, CheckCircle2, ClipboardList, FileText, Lightbulb, LineChart, List, Scale, Search, Target } from "lucide-react";
 import { useT } from "@/i18n/provider";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -59,7 +48,8 @@ export default function TutorialsPage() {
     <div className="mx-auto max-w-4xl">
       <div className="mb-10">
         <h1 className="text-3xl font-extrabold tracking-tight">{t("tutorials.title")}</h1>
-        <p className="text-muted-foreground">{t("tutorials.subtitle")}</p>
+        <p className="mt-1 text-muted-foreground">{t("tutorials.subtitle")}</p>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">{t("tutorials.overview")}</p>
       </div>
       <TutorialSection
         title={t("tutorials.bulletinsTitle")}
@@ -69,6 +59,15 @@ export default function TutorialsPage() {
           { icon: Search, title: t("tutorials.b2t"), desc: t("tutorials.b2d") },
           { icon: Bell, title: t("tutorials.b3t"), desc: t("tutorials.b3d") },
           { icon: FileText, title: t("tutorials.b4t"), desc: t("tutorials.b4d") },
+        ]}
+      />
+      <TutorialSection
+        title={t("tutorials.ftoTitle")}
+        icon={Scale}
+        steps={[
+          { icon: ClipboardList, title: t("tutorials.f1t"), desc: t("tutorials.f1d") },
+          { icon: Search, title: t("tutorials.f2t"), desc: t("tutorials.f2d") },
+          { icon: Scale, title: t("tutorials.f3t"), desc: t("tutorials.f3d") },
         ]}
       />
       <TutorialSection
@@ -87,15 +86,6 @@ export default function TutorialsPage() {
           { icon: Target, title: t("tutorials.m1t"), desc: t("tutorials.m1d") },
           { icon: Search, title: t("tutorials.m2t"), desc: t("tutorials.m2d") },
           { icon: FileText, title: t("tutorials.m3t"), desc: t("tutorials.m3d") },
-        ]}
-      />
-      <TutorialSection
-        title={t("tutorials.socialTitle")}
-        icon={Radio}
-        steps={[
-          { icon: Radio, title: t("tutorials.s1t"), desc: t("tutorials.s1d") },
-          { icon: Search, title: t("tutorials.s2t"), desc: t("tutorials.s2d") },
-          { icon: FileText, title: t("tutorials.s3t"), desc: t("tutorials.s3d") },
         ]}
       />
     </div>

@@ -13,9 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { isOrgAdmin } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
-import { getReportTemplate } from "@/lib/reports/templates-store";
-import { deleteReport, getReport, listReportsForUser, newReportId, upsertReport } from "@/lib/reports/reports-store";
+import { getReportTemplate } from "@/lib/reports/templates-repository";
+import { getReportTemplate as getLocalTemplate } from "@/lib/reports/templates-store";
+import { newReportId } from "@/lib/reports/reports-store";
+import { deleteReport, getReport, listReportsForUser, upsertReport } from "@/lib/reports/reports-repository";
 import { KIND_PATH, type ReportKind, type StoredReport } from "@/lib/reports/types";
+import { appendClientAiUsage, estimateClientTokens } from "@/lib/ai/usage-store";
+import { recordActivity } from "@/lib/activity";
 
 const STEPS = ["questionnaire", "confirm", "ready"] as const;
 
@@ -49,20 +53,32 @@ export function ReportToolPage({ kind }: { kind: ReportKind }) {
   const { user } = useAuth();
   const router = useRouter();
   const seeOrg = isOrgAdmin(user?.role);
-  const [template, setTemplate] = useState(() => getReportTemplate(kind));
+  const [template, setTemplate] = useState(() => getLocalTemplate(kind));
   const [items, setItems] = useState<StoredReport[]>([]);
   const [step, setStep] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    setTemplate(getReportTemplate(kind));
     setStep(null);
+    let cancelled = false;
+    void getReportTemplate(kind).then((tpl) => {
+      if (!cancelled) setTemplate(tpl);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [kind]);
 
   useEffect(() => {
     if (!user) return;
-    setItems(listReportsForUser(user.id, user.organizationId, seeOrg, kind));
+    let cancelled = false;
+    void listReportsForUser(user.id, user.organizationId, seeOrg, kind).then((rows) => {
+      if (!cancelled) setItems(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [user, seeOrg, kind]);
 
   const titleKey =
@@ -70,9 +86,9 @@ export function ReportToolPage({ kind }: { kind: ReportKind }) {
   const leadKey =
     kind === "estado_arte" ? "tools.estadoArteLead" : kind === "informe_mercado" ? "tools.informeMercadoLead" : "tools.socialLead";
 
-  function refresh() {
+  async function refresh() {
     if (!user) return;
-    setItems(listReportsForUser(user.id, user.organizationId, seeOrg, kind));
+    setItems(await listReportsForUser(user.id, user.organizationId, seeOrg, kind));
   }
 
   function startNew() {
@@ -110,22 +126,40 @@ export function ReportToolPage({ kind }: { kind: ReportKind }) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    upsertReport(draft);
+    await upsertReport(draft);
     try {
+      const headers: Record<string, string> = {
+        "content-type": "application/json",
+        "x-demo-user-id": user.id,
+        "x-demo-plan": user.plan,
+      };
       const res = await fetch("/api/reports/generate", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers,
         body: JSON.stringify({ kind, answers, template }),
       });
       const data = (await res.json()) as { markdown?: string; sources?: StoredReport["sources"]; error?: string };
       if (!res.ok || !data.markdown) throw new Error(data.error ?? t("tools.generateError"));
-      upsertReport({ ...draft, markdown: data.markdown, sources: data.sources ?? [], status: "ready" });
+      await upsertReport({ ...draft, markdown: data.markdown, sources: data.sources ?? [], status: "ready" });
+      appendClientAiUsage({
+        userId: user.id,
+        kind: "report_generate",
+        tokensOut: estimateClientTokens(data.markdown),
+        meta: { reportKind: kind, reportId: draft.id },
+      });
+      void recordActivity({
+        organizationId: user.organizationId,
+        userId: user.id,
+        kind: "report_generated",
+        title: `Informe: ${title}`,
+        meta: { reportId: draft.id, kind },
+      });
       toast.success(t("tools.generated"));
       router.push(withLocale(locale, `${KIND_PATH[kind]}/${draft.id}`));
     } catch (err) {
-      upsertReport({ ...draft, status: "failed" });
+      await upsertReport({ ...draft, status: "failed" });
       toast.error(err instanceof Error ? err.message : t("tools.generateError"));
-      refresh();
+      await refresh();
     } finally {
       setBusy(false);
     }
@@ -242,9 +276,10 @@ export function ReportToolPage({ kind }: { kind: ReportKind }) {
               type="button"
               className="flex-1 rounded-xl border bg-card p-4 text-left hover:border-signal"
               onClick={() => {
-                const full = getReport(item.id);
-                if (full?.markdown) router.push(withLocale(locale, `${KIND_PATH[kind]}/${item.id}`));
-                else toast.message(t("tools.incomplete"));
+                void getReport(item.id).then((full) => {
+                  if (full?.markdown) router.push(withLocale(locale, `${KIND_PATH[kind]}/${item.id}`));
+                  else toast.message(t("tools.incomplete"));
+                });
               }}
             >
               <p className="font-medium">{item.title}</p>
@@ -254,8 +289,7 @@ export function ReportToolPage({ kind }: { kind: ReportKind }) {
               variant="ghost"
               size="icon"
               onClick={() => {
-                deleteReport(item.id);
-                refresh();
+                void deleteReport(item.id).then(() => refresh());
               }}
               aria-label={t("common.delete")}
             >

@@ -3,6 +3,9 @@ import { z } from "zod";
 import { generateReportMarkdown } from "@/lib/reports/generate";
 import { REPORT_KINDS, reportTemplateSchema } from "@/lib/reports/types";
 import { DEFAULT_TEMPLATES } from "@/lib/reports/defaults";
+import { requireApiAuthWithPlan } from "@/lib/api/plan-guard";
+import { assertAiQuota, estimateTokens, extraAiFromRequest, recordAiUsage } from "@/lib/ai/usage";
+import { track } from "@/lib/analytics-server";
 
 const schema = z.object({
   kind: z.enum(REPORT_KINDS),
@@ -11,6 +14,17 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const auth = await requireApiAuthWithPlan(request, "reports-generate");
+  if (!auth.ok) return auth.response;
+
+  const quota = await assertAiQuota({
+    userId: auth.userId,
+    organizationId: auth.organizationId,
+    plan: auth.plan,
+    extraAi: extraAiFromRequest(request),
+  });
+  if (quota) return quota;
+
   const parsed = schema.safeParse(await request.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
@@ -25,7 +39,22 @@ export async function POST(request: Request) {
       template,
       answers: parsed.data.answers,
     });
-    return NextResponse.json(result);
+    const inText = JSON.stringify(parsed.data.answers);
+    await recordAiUsage({
+      userId: auth.userId,
+      organizationId: auth.organizationId,
+      kind: "report_generate",
+      tokensIn: estimateTokens(inText),
+      tokensOut: estimateTokens(result.markdown ?? ""),
+      meta: { kind: parsed.data.kind, demo: auth.demo },
+    });
+    void track("report_generate", {
+      userId: auth.userId,
+      organizationId: auth.organizationId,
+      kind: parsed.data.kind,
+      demo: auth.demo,
+    });
+    return NextResponse.json({ ...result, userId: auth.userId });
   } catch (err) {
     const message = err instanceof Error ? err.message : "generate_failed";
     return NextResponse.json({ error: message }, { status: 500 });

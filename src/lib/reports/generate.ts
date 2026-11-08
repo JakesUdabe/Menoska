@@ -1,4 +1,5 @@
 import { completeWithLlm } from "@/lib/ai/engine";
+import { searchPatents } from "@/lib/patents/lens";
 import { gatherSocialEvidence, splitLines, type SocialEvidence } from "./social-research";
 import type { ReportKind, ReportTemplate } from "./types";
 
@@ -29,8 +30,32 @@ export async function generateReportMarkdown(input: {
   template: ReportTemplate;
   answers: Record<string, string>;
 }): Promise<{ markdown: string; sources: SocialEvidence[] }> {
-  const sources =
-    input.kind === "social_listening" ||
+  const wantsPatents =
+    input.kind === "estado_arte" ||
+    input.template.secciones.some((section) => section.prompts.some((prompt) => prompt.recursos.includes("patentes")));
+  const patentQuery = [input.answers.tema, input.answers.sector, input.answers.actores, input.answers.preguntas]
+    .map((value) => (value ?? "").trim())
+    .filter(Boolean)
+    .join(" ")
+    .slice(0, 240);
+  const patents = wantsPatents && patentQuery ? await searchPatents(patentQuery, 6) : [];
+  const patentEvidence: SocialEvidence[] = patents.map((patent) => ({
+    source: "patentes",
+    title: `${patent.id} ${patent.title}`.trim(),
+    url: patent.url,
+    snippet: [
+      patent.legalStatus ? `Estado legal: ${patent.legalStatus}` : "",
+      patent.applicants.length ? `Solicitante: ${patent.applicants.join(", ")}` : "",
+      patent.ipc.length ? `IPC: ${patent.ipc.join(", ")}` : "",
+      patent.abstract,
+      patent.claims?.[0] ? `Reivindicación: ${patent.claims[0].slice(0, 500)}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+  }));
+
+  const sources = [
+    ...(input.kind === "social_listening" ||
     input.template.secciones.some((s) => s.prompts.some((p) => p.recursos.includes("redes_sociales") || p.recursos.includes("voc")))
       ? await gatherSocialEvidence({
           brands: splitLines(input.answers.marcas ?? input.answers.tema ?? input.answers.mercado),
@@ -39,7 +64,9 @@ export async function generateReportMarkdown(input: {
           period: input.answers.periodo ?? input.answers.horizonte ?? "",
           language: input.answers.idioma,
         })
-      : [];
+      : []),
+    ...patentEvidence,
+  ];
 
   const evidenceText = sources
     .map((e) => `[${e.source}] ${e.title}${e.url ? ` (${e.url})` : ""}\n${e.snippet}`)

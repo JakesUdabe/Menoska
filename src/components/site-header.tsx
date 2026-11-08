@@ -9,6 +9,23 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/auth-provider";
 
+export function BrandMark({ size = 28 }: { size?: number }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/mark.svg" alt="" width={size} height={Math.round(size * 0.7)} className="shrink-0" />
+  );
+}
+
+export function BrandWordmark({ className = "" }: { className?: string }) {
+  const t = useT();
+  return (
+    <span className={`inline-flex items-baseline gap-1.5 font-display tracking-tight ${className}`}>
+      <span className="font-semibold text-primary">{t("common.brandShort")}</span>
+      <span className="font-medium text-ink">{t("common.brandSuffix")}</span>
+    </span>
+  );
+}
+
 export function SiteHeader() {
   const t = useT();
   const { locale } = useLocale();
@@ -24,10 +41,11 @@ export function SiteHeader() {
   ];
 
   return (
-    <header className="sticky top-0 z-[100] isolate border-b border-border bg-background">
+    <header className="sticky top-0 z-[100] isolate border-b border-border/80 bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <Link href={href("/")} className="text-[15px] font-semibold tracking-tight">
-          {t("common.brand")}
+        <Link href={href("/")} className="flex items-center gap-2.5" aria-label={t("common.brand")}>
+          <BrandMark size={30} />
+          <BrandWordmark className="text-[15px]" />
         </Link>
         <nav className="hidden items-center gap-6 md:flex" aria-label="Primary">
           {links.map((l) => (

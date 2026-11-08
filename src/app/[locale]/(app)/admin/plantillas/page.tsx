@@ -26,7 +26,12 @@ import {
   type ReportKind,
   type ReportTemplate,
 } from "@/lib/reports/types";
-import { getReportTemplate, resetReportTemplate, saveReportTemplate } from "@/lib/reports/templates-store";
+import {
+  getReportTemplate,
+  resetReportTemplate,
+  saveReportTemplate,
+} from "@/lib/reports/templates-repository";
+import { getReportTemplate as getLocalTemplate } from "@/lib/reports/templates-store";
 
 const KIND_LABEL: Record<ReportKind, string> = {
   estado_arte: "tools.estadoArte",
@@ -38,15 +43,20 @@ export default function AdminTemplatesPage() {
   const t = useT();
   const { user } = useAuth();
   const [kind, setKind] = useState<ReportKind>("estado_arte");
-  const [template, setTemplate] = useState<ReportTemplate>(() => getReportTemplate("estado_arte"));
+  const [template, setTemplate] = useState<ReportTemplate>(() => getLocalTemplate("estado_arte"));
 
   useEffect(() => {
-    setTemplate(getReportTemplate(kind));
+    let cancelled = false;
+    void getReportTemplate(kind).then((tpl) => {
+      if (!cancelled) setTemplate(tpl);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [kind]);
 
   function load(next: ReportKind) {
     setKind(next);
-    setTemplate(getReportTemplate(next));
   }
 
   const questionIds = useMemo(() => template.cuestionario.map((q) => q.id), [template.cuestionario]);
@@ -311,13 +321,15 @@ export default function AdminTemplatesPage() {
       <div className="flex flex-wrap gap-2">
         <Button
           onClick={() => {
-            try {
-              const saved = saveReportTemplate(template);
-              setTemplate(saved);
-              toast.success(t("admin.saved"));
-            } catch (err) {
-              toast.error(err instanceof Error ? err.message : t("admin.saveError"));
-            }
+            void (async () => {
+              try {
+                const saved = await saveReportTemplate(template);
+                setTemplate(saved);
+                toast.success(t("admin.saved"));
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : t("admin.saveError"));
+              }
+            })();
           }}
         >
           {t("common.save")}
@@ -325,8 +337,10 @@ export default function AdminTemplatesPage() {
         <Button
           variant="outline"
           onClick={() => {
-            setTemplate(resetReportTemplate(kind));
-            toast.success(t("admin.reset"));
+            void (async () => {
+              setTemplate(await resetReportTemplate(kind));
+              toast.success(t("admin.reset"));
+            })();
           }}
         >
           {t("admin.reset")}

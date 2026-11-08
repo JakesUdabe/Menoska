@@ -1,5 +1,6 @@
 import type { CandidateItem } from "./and-filter";
 import type { AppRole, PlanType } from "./rbac";
+import { SHOWCASE_PATENTS } from "./showcase-case";
 
 export type DemoProfile = {
   id: string;
@@ -24,15 +25,15 @@ export const DEMO_LOGIN_ACCOUNTS = [
 export const DEMO_PROFILES: DemoProfile[] = [
   {
     id: "user-superadmin",
-    email: "superadmin@abinews.com",
+    email: "superadmin@menoska.com",
     firstName: "Marina",
     lastName: "Soler",
     fullName: "Marina Soler",
     role: "superadmin",
     locale: "es",
     organizationId: "org-abi",
-    organizationName: "ABI News",
-    organizationDomain: "abinews.com",
+    organizationName: "Menoska Consulting",
+    organizationDomain: "menoska.com",
     plan: "enterprise",
   },
   {
@@ -63,66 +64,62 @@ export const DEMO_PROFILES: DemoProfile[] = [
   },
 ];
 
+const SHOWCASE_PATENT_CANDIDATES: CandidateItem[] = SHOWCASE_PATENTS.map((patent) => ({
+  id: patent.id,
+  title: `${patent.id} ${patent.title}`,
+  body: patent.body,
+  url: patent.url,
+  source: "patent" as const,
+  publishedAt: patent.publishedAt,
+  company: patent.assignee,
+  ipc: patent.ipc,
+}));
+
 export const DEMO_CANDIDATES: CandidateItem[] = [
+  ...SHOWCASE_PATENT_CANDIDATES,
   {
-    id: "n1",
-    title: "Bosch unveils flexible electronics printers for automotive interiors",
-    body: "Bosch announced a production line of flexible electronics printers aimed at automotive dashboards in Europe.",
-    url: "https://example.com/bosch-flexible-electronics",
+    id: "n-tesla-thermal",
+    title: "Tesla public patents describe battery pack thermal runaway exhaust",
+    body: "Granted Tesla documents cover how a battery pack enclosure vents gas and mitigates thermal runaway.",
+    url: "https://patents.google.com/patent/US8268469B2/en",
     source: "news",
-    publishedAt: "2026-09-14",
-    company: "Bosch",
+    publishedAt: "2012-09-18",
+    company: "Tesla",
   },
   {
-    id: "n2",
-    title: "Bosch reports record quarterly revenue in power tools",
-    body: "The industrial group beat expectations in its consumer power-tools division, with no mention of printed electronics.",
-    url: "https://example.com/bosch-revenue",
+    id: "n-tesla-control",
+    title: "Tesla battery pack temperature control is a granted patent",
+    body: "US8082743B2 covers a control system that holds battery pack temperature inside an operating window.",
+    url: "https://patents.google.com/patent/US8082743B2/en",
     source: "news",
-    publishedAt: "2026-09-13",
-    company: "Bosch",
+    publishedAt: "2011-12-20",
+    company: "Tesla",
   },
   {
-    id: "n3",
-    title: "Printed electronics stretchable inks reach 40% elongation",
-    body: "A materials start-up published results on stretchable conductive inks without naming automotive OEMs.",
-    url: "https://example.com/inks",
+    id: "n-tesla-deliveries",
+    title: "Tesla reports quarterly vehicle deliveries",
+    body: "Delivery totals for the quarter. No discussion of pack design.",
+    url: "https://www.tesla.com/blog",
+    source: "news",
+    publishedAt: "2026-10-02",
+    company: "Tesla",
+  },
+  {
+    id: "n-generic-thermal",
+    title: "Battery thermal management papers increase in academic journals",
+    body: "Survey of cooling methods. No vehicle OEM is named.",
+    url: "https://patents.google.com/?q=battery%20thermal%20management",
     source: "news",
     publishedAt: "2026-09-12",
-  },
-  {
-    id: "p1",
-    title: "WO2026/441122 Flexible printed circuit for vehicle lighting",
-    body: "Continental AG files a patent on flexible electronics printers applied to automotive lighting modules.",
-    url: "https://www.lens.org/lens/patent/demo-441122",
-    source: "patent",
-    publishedAt: "2026-09-11",
-    company: "Continental",
-    ipc: "H05K1/02",
-  },
-  {
-    id: "n4",
-    title: "Continental opens a tyre recycling plant in Hungary",
-    body: "The plant focuses on circular materials for tyres and does not discuss electronics or printing.",
-    url: "https://example.com/continental-tyres",
-    source: "news",
-    publishedAt: "2026-09-10",
-    company: "Continental",
-  },
-  {
-    id: "p2",
-    title: "EP4123456 OLED stack for flexible automotive displays",
-    body: "LG Display describes an OLED stack manufactured with flexible electronics printers for automotive HUDs.",
-    url: "https://www.lens.org/lens/patent/demo-ep4123456",
-    source: "patent",
-    publishedAt: "2026-09-09",
-    company: "LG Display",
-    ipc: "H10K59/10",
   },
 ];
 
 export const DEMO_SEND_CALENDAR = [
-  { id: "s1", org: "Menoska Consulting", bulletin: "Competencia automoción EU", when: "2026-09-22T07:00:00Z", status: "scheduled" },
-  { id: "s2", org: "Astoha", bulletin: "Patentes baterías Si", when: "2026-09-23T06:30:00Z", status: "scheduled" },
-  { id: "s3", org: "Menoska Consulting", bulletin: "Patentes emergentes printed electronics", when: "2026-09-29T07:00:00Z", status: "scheduled" },
+  {
+    id: "s1",
+    org: "Menoska Consulting",
+    bulletin: "Vigilancia · térmica de baterías",
+    when: "2026-11-02T07:00:00Z",
+    status: "scheduled",
+  },
 ];

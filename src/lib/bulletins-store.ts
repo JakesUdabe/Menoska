@@ -1,4 +1,5 @@
 import type { BulletinSectionCriteria } from "./and-filter";
+import { readMigratedStorage, writeStorage } from "./storage-keys";
 
 export type BulletinFrequency = "daily" | "weekly" | "biweekly" | "monthly";
 export type BulletinStatus = "draft" | "active" | "paused";
@@ -37,64 +38,35 @@ export type StoredBulletin = {
   updatedAt: string;
 };
 
-const KEY = "abi_bulletins";
+const KEY = "menoska_bulletins";
+const OLD_KEY = "abi_bulletins";
 
 const SEED: StoredBulletin[] = [
   {
     id: "b1",
     createdBy: "user-client",
     organizationId: "org-menoska",
-    name: "Competencia automoción EU",
-    subject: "Vigilancia · automoción y electrónica flexible",
+    name: "Vigilancia · térmica de baterías",
+    subject: "Vigilancia · Tesla y gestión térmica de packs",
     language: "es",
     frequency: "weekly",
     sendDay: 1,
     sendHour: 7,
-    timezone: "UTC",
-    recipients: [
-      { email: "comite.rd@menoska.consulting", companies: [], technologies: [] },
-      { email: "unai@menoska.consulting", companies: [], technologies: [] },
-    ],
+    timezone: "Europe/Madrid",
+    recipients: [{ email: "comite.rd@menoska.consulting", companies: [], technologies: [] }],
     mode: "common",
-    nlQuery: "",
+    nlQuery: "Patentes públicas de Tesla sobre thermal runaway y control de temperatura del battery pack",
     sections: [
       {
-        title: "Competencia directa",
-        companies: ["Bosch", "Continental"],
-        technologies: ["flexible electronics", "automotive"],
+        title: "Familia de referencia",
+        companies: ["Tesla"],
+        technologies: ["battery", "thermal"],
       },
     ],
-    maxItems: 10,
+    maxItems: 8,
     status: "active",
-    createdAt: "2026-09-01T08:00:00.000Z",
-    updatedAt: "2026-09-10T08:00:00.000Z",
-  },
-  {
-    id: "b2",
-    createdBy: "user-admin",
-    organizationId: "org-menoska",
-    name: "Patentes emergentes printed electronics",
-    subject: "Emerging patents · printed electronics",
-    language: "en",
-    frequency: "monthly",
-    sendDay: null,
-    sendHour: 8,
-    timezone: "UTC",
-    recipients: [{ email: "ip@menoska.consulting", companies: [], technologies: [] }],
-    mode: "common",
-    nlQuery:
-      "Buscamos desarrollos en tecnologías de impresoras de electrónica flexible aplicados a empresas del sector automoción en Europa",
-    sections: [
-      {
-        title: "Patentes emergentes",
-        companies: ["LG Display", "Bosch"],
-        technologies: ["printed electronics", "OLED", "flexible"],
-      },
-    ],
-    maxItems: 10,
-    status: "draft",
-    createdAt: "2026-09-05T08:00:00.000Z",
-    updatedAt: "2026-09-12T08:00:00.000Z",
+    createdAt: "2026-10-01T08:00:00.000Z",
+    updatedAt: "2026-10-20T08:00:00.000Z",
   },
 ];
 
@@ -205,24 +177,37 @@ export function normalizeBulletin(raw: Partial<StoredBulletin> & { recipients?: 
   };
 }
 
+function withShowcase(items: StoredBulletin[]): StoredBulletin[] {
+  const seed = SEED[0];
+  const rest = items.filter(
+    (item) => item.id !== seed.id && item.name !== "Patentes emergentes printed electronics" && item.name !== "Competencia automoción EU",
+  );
+  return [seed, ...rest];
+}
+
 function readAll(): StoredBulletin[] {
   if (typeof window === "undefined") return SEED;
   try {
-    const stored = localStorage.getItem(KEY);
+    const stored = readMigratedStorage(KEY, OLD_KEY);
     if (!stored) {
-      localStorage.setItem(KEY, JSON.stringify(SEED));
+      writeStorage(KEY, JSON.stringify(SEED));
       return SEED;
     }
     const parsed = JSON.parse(stored) as unknown;
     if (!Array.isArray(parsed)) return SEED;
-    return parsed.map((item) => normalizeBulletin(item as Partial<StoredBulletin>));
+    const normalized = parsed.map((item) => normalizeBulletin(item as Partial<StoredBulletin>));
+    const needsShowcase = !normalized.some((item) => item.id === SEED[0].id && item.name === SEED[0].name);
+    if (!needsShowcase) return normalized;
+    const next = withShowcase(normalized);
+    writeAll(next);
+    return next;
   } catch {
     return SEED;
   }
 }
 
 function writeAll(items: StoredBulletin[]) {
-  localStorage.setItem(KEY, JSON.stringify(items));
+  writeStorage(KEY, JSON.stringify(items));
 }
 
 export function listBulletinsForUser(userId: string, organizationId: string | null, canSeeOrg: boolean): StoredBulletin[] {

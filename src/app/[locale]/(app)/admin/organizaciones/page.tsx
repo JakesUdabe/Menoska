@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useT } from "@/i18n/provider";
 import { DEMO_PROFILES } from "@/lib/demo-data";
-import { listOrgs, splitOrganization } from "@/lib/orgs-store";
+import { listOrgs, splitOrganization, type OrgRecord } from "@/lib/orgs-repository";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,16 +13,22 @@ import { isSuperAdmin } from "@/lib/rbac";
 
 export default function AdminOrgsPage() {
   const t = useT();
-  const { user } = useAuth();
-  const [orgs, setOrgs] = useState<ReturnType<typeof listOrgs>>([]);
+  const { user, demo } = useAuth();
+  const [orgs, setOrgs] = useState<OrgRecord[]>([]);
   const [name, setName] = useState("");
   const [domain, setDomain] = useState("");
   const [source, setSource] = useState(user?.organizationId ?? "");
 
   useEffect(() => {
-    const loaded = listOrgs();
-    setOrgs(loaded);
-    setSource((prev) => prev || user?.organizationId || loaded[0]?.id || "");
+    let cancelled = false;
+    void listOrgs().then((loaded) => {
+      if (cancelled) return;
+      setOrgs(loaded);
+      setSource((prev) => prev || user?.organizationId || loaded[0]?.id || "");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [user?.organizationId]);
 
   const visible = useMemo(() => {
@@ -39,9 +45,17 @@ export default function AdminOrgsPage() {
             <p className="font-medium">{o.name}</p>
             <p className="text-sm text-muted-foreground">
               @{o.domain} · {o.plan} · {o.status}
+              {typeof o.memberCount === "number" ? ` · ${o.memberCount} ${t("admin.users").toLowerCase()}` : null}
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
-              {t("admin.users")} {DEMO_PROFILES.filter((p) => p.organizationId === o.id).map((p) => p.email).join(", ") || "—"}
+              {t("admin.users")}{" "}
+              {demo
+                ? DEMO_PROFILES.filter((p) => p.organizationId === o.id)
+                    .map((p) => p.email)
+                    .join(", ") || "—"
+                : typeof o.memberCount === "number"
+                  ? `${o.memberCount}`
+                  : "—"}
             </p>
           </li>
         ))}
@@ -64,12 +78,14 @@ export default function AdminOrgsPage() {
             className="mt-4"
             onClick={() => {
               if (!name || !domain) return;
-              const created = splitOrganization(source, name, domain);
-              setOrgs(listOrgs());
-              setSource(created.id);
-              toast.success(created.name);
-              setName("");
-              setDomain("");
+              void (async () => {
+                const created = await splitOrganization(source, name, domain);
+                setOrgs(await listOrgs());
+                setSource(created.id);
+                toast.success(created.name);
+                setName("");
+                setDomain("");
+              })();
             }}
           >
             {t("admin.split")}

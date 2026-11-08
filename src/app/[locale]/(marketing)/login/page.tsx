@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale, useT } from "@/i18n/provider";
 import { withLocale } from "@/lib/paths";
 import { useAuth } from "@/components/auth-provider";
@@ -11,12 +11,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { defaultAppRoute } from "@/lib/rbac";
 
-export default function LoginPage() {
+function LoginForm() {
   const t = useT();
   const { locale } = useLocale();
   const { signIn, demo } = useAuth();
   const router = useRouter();
+  const search = useSearchParams();
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (search.get("error") === "auth") {
+      setError(t("auth.authError"));
+    }
+  }, [search, t]);
 
   async function onSubmit(formData: FormData) {
     const identifier = String(formData.get(demo ? "username" : "email") ?? "");
@@ -41,8 +48,9 @@ export default function LoginPage() {
       >
         {demo ? (
           <div>
-            <Label htmlFor="username">{t("auth.username")}</Label>
+            <Label htmlFor="username">{t("auth.usernameOrEmail")}</Label>
             <Input id="username" name="username" type="text" required autoComplete="username" />
+            <p className="mt-1 text-xs text-muted-foreground">{t("auth.demoLoginHint")}</p>
           </div>
         ) : (
           <div>
@@ -54,6 +62,11 @@ export default function LoginPage() {
           <Label htmlFor="password">{t("auth.password")}</Label>
           <Input id="password" name="password" type="password" required autoComplete="current-password" />
         </div>
+        <p className="text-sm">
+          <Link className="text-muted-foreground underline hover:text-foreground" href={withLocale(locale, "/recuperar")}>
+            {t("auth.forgotPassword")}
+          </Link>
+        </p>
         {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <Button type="submit" className="w-full">
           {t("auth.submitLogin")}
@@ -66,5 +79,13 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-sm text-muted-foreground">…</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

@@ -1,7 +1,9 @@
 import { DEFAULT_TEMPLATES } from "./defaults";
 import { reportTemplateSchema, type ReportKind, type ReportTemplate } from "./types";
+import { readMigratedStorage, writeStorage } from "@/lib/storage-keys";
 
-const KEY = "abi_report_templates";
+const KEY = "menoska_report_templates";
+const OLD_KEY = "abi_report_templates";
 
 function cloneDefaults(): ReportTemplate[] {
   return (Object.values(DEFAULT_TEMPLATES) as ReportTemplate[]).map((tpl) =>
@@ -12,7 +14,7 @@ function cloneDefaults(): ReportTemplate[] {
 function readAll(): ReportTemplate[] {
   if (typeof window === "undefined") return cloneDefaults();
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = readMigratedStorage(KEY, OLD_KEY);
     if (!raw) return cloneDefaults();
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return cloneDefaults();
@@ -28,7 +30,7 @@ function readAll(): ReportTemplate[] {
 }
 
 function persist(items: ReportTemplate[]) {
-  localStorage.setItem(KEY, JSON.stringify(items));
+  writeStorage(KEY, JSON.stringify(items));
 }
 
 export function listReportTemplates(): ReportTemplate[] {

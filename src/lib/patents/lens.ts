@@ -1,3 +1,5 @@
+import { epoConfigured, parseEpoOpsHits, searchPatentsEpo } from "./epo";
+
 export type PatentHit = {
   id: string;
   title: string;
@@ -6,11 +8,48 @@ export type PatentHit = {
   applicants: string[];
   ipc: string[];
   publishedAt: string;
+  /** Official claim text when the register returns it. */
+  claims?: string[];
+  /** EPO legal status. Absent when the source did not return it. */
+  legalStatus?: "alive" | "dead" | "pending" | "unknown";
 };
+
+/** Pull claim strings out of a Lens (or similar) claims payload. */
+export function extractClaimTexts(claims: unknown): string[] {
+  const out: string[] = [];
+  const visit = (node: unknown) => {
+    if (!node) return;
+    if (typeof node === "string") {
+      const text = node.trim();
+      if (text.length > 20) out.push(text);
+      return;
+    }
+    if (Array.isArray(node)) {
+      node.forEach(visit);
+      return;
+    }
+    if (typeof node === "object") {
+      const record = node as Record<string, unknown>;
+      for (const key of ["claim_text", "claim-text", "text", "claim", "claims", "p", "$"]) {
+        if (key in record) visit(record[key]);
+      }
+    }
+  };
+  visit(claims);
+  return [...new Set(out)].slice(0, 12);
+}
 
 const LENS_BASE = "https://api.lens.org/patent/search";
 
 export async function searchPatents(query: string, size = 10): Promise<PatentHit[]> {
+  if (epoConfigured()) {
+    const epoHits = await searchPatentsEpo(query, size);
+    if (epoHits.length) return epoHits;
+  }
+  return searchLens(query, size);
+}
+
+async function searchLens(query: string, size = 10): Promise<PatentHit[]> {
   const token = process.env.LENS_API_TOKEN;
   if (!token) return [];
 
@@ -23,7 +62,7 @@ export async function searchPatents(query: string, size = 10): Promise<PatentHit
     body: JSON.stringify({
       query: { match: { title: query } },
       size,
-      include: ["biblio", "abstract"],
+      include: ["biblio", "abstract", "claims"],
     }),
   });
   if (!res.ok) return [];
@@ -31,6 +70,7 @@ export async function searchPatents(query: string, size = 10): Promise<PatentHit
     data?: Array<{
       lens_id?: string;
       date_published?: string;
+      claims?: unknown;
       biblio?: {
         invention_title?: Array<{ text?: string }>;
         parties?: { applicants?: Array<{ extracted_name?: { value?: string } }> };
@@ -52,30 +92,12 @@ export async function searchPatents(query: string, size = 10): Promise<PatentHit
       .map((c) => c.symbol)
       .filter((v): v is string => Boolean(v)),
     publishedAt: row.date_published ?? new Date().toISOString().slice(0, 10),
+    claims: extractClaimTexts(row.claims),
   }));
 }
 
-export async function searchPatentsEpoFallback(query: string): Promise<PatentHit[]> {
-  const key = process.env.EPO_OPS_KEY;
-  const secret = process.env.EPO_OPS_SECRET;
-  if (!key || !secret) return [];
-  const basic = Buffer.from(`${key}:${secret}`).toString("base64");
-  const tokenRes = await fetch("https://ops.epo.org/3.2/auth/accesstoken", {
-    method: "POST",
-    headers: {
-      Authorization: `Basic ${basic}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: "grant_type=client_credentials",
-  });
-  if (!tokenRes.ok) return [];
-  const tokenJson = (await tokenRes.json()) as { access_token?: string };
-  const access = tokenJson.access_token;
-  if (!access) return [];
-  const search = await fetch(
-    `https://ops.epo.org/3.2/rest-services/published-data/search?q=${encodeURIComponent(query)}`,
-    { headers: { Authorization: `Bearer ${access}`, Accept: "application/json" } },
-  );
-  if (!search.ok) return [];
-  return [];
+export async function searchPatentsEpoFallback(query: string, size = 10): Promise<PatentHit[]> {
+  return searchPatentsEpo(query, size);
 }
+
+export { parseEpoOpsHits };

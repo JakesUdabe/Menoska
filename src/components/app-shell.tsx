@@ -83,11 +83,14 @@ export function AppShell({
   return (
     <div className="flex min-h-screen bg-muted/20">
       {open ? (
-        <div className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm lg:hidden" onClick={() => setOpen(false)} />
+        <div
+          className="no-print fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm lg:hidden"
+          onClick={() => setOpen(false)}
+        />
       ) : null}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-300 lg:sticky lg:translate-x-0",
+          "no-print fixed inset-y-0 left-0 z-50 flex h-screen w-64 flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-300 lg:sticky lg:translate-x-0",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -113,7 +116,7 @@ export function AppShell({
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-lg lg:px-8">
+        <header className="no-print sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/80 px-4 backdrop-blur-lg lg:px-8">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(true)} aria-label={t("common.openMenu")}>
             <Menu className="size-5" />
           </Button>
@@ -124,7 +127,9 @@ export function AppShell({
         <main id="main" className="flex-1 p-4 lg:p-8">
           {children}
         </main>
-        <SiteFooter compact />
+        <div className="no-print">
+          <SiteFooter compact />
+        </div>
       </div>
     </div>
   );

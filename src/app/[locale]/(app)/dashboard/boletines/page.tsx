@@ -8,7 +8,7 @@ import { useLocale, useT } from "@/i18n/provider";
 import { withLocale } from "@/lib/paths";
 import { Button } from "@/components/ui/button";
 import { isOrgAdmin, maxActiveBulletins } from "@/lib/rbac";
-import { listBulletinsForUser, type StoredBulletin } from "@/lib/bulletins-store";
+import { listBulletinsForUser, type StoredBulletin } from "@/lib/bulletins-repository";
 
 export default function BulletinsPage() {
   const t = useT();
@@ -20,7 +20,13 @@ export default function BulletinsPage() {
 
   useEffect(() => {
     if (!user) return;
-    setItems(listBulletinsForUser(user.id, user.organizationId, seeOrg));
+    let cancelled = false;
+    void listBulletinsForUser(user.id, user.organizationId, seeOrg).then((rows) => {
+      if (!cancelled) setItems(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [user, seeOrg]);
 
   return (
@@ -40,7 +46,16 @@ export default function BulletinsPage() {
         </Button>
       </div>
       <ul className="mt-8 space-y-3">
-        {items.length === 0 ? <p>{t("dashboard.empty")}</p> : null}
+        {items.length === 0 ? (
+          <li className="rounded-xl border border-dashed border-border bg-card/40 px-5 py-8 text-center">
+            <p className="text-sm text-muted-foreground">{t("dashboard.empty")}</p>
+            <Button className="mt-4" asChild>
+              <Link href={withLocale(locale, "/dashboard/boletines/nuevo")}>
+                <Plus className="size-4" /> {t("dashboard.onboardingBulletinCta")}
+              </Link>
+            </Button>
+          </li>
+        ) : null}
         {items.map((b) => (
           <li key={b.id}>
             <Link href={withLocale(locale, `/dashboard/boletines/${b.id}`)} className="block rounded-xl border bg-card p-4 hover:border-signal">

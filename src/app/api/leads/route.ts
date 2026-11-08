@@ -1,41 +1,32 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { clientIp, rateLimit } from "@/lib/api/rate-limit";
 
 const schema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   company: z.string().min(2),
   message: z.string().min(12),
-  recaptchaToken: z.string().optional(),
 });
 
-async function verifyRecaptcha(token?: string) {
-  const secret = process.env.RECAPTCHA_SECRET_KEY;
-  if (!secret) return true;
-  if (!token) return false;
-  const res = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-    method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded" },
-    body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(token)}`,
-  });
-  const data = (await res.json()) as { success?: boolean; score?: number };
-  return Boolean(data.success) && (data.score ?? 1) >= 0.4;
-}
-
 export async function POST(request: Request) {
+  const ip = clientIp(request);
+  const limited = rateLimit(`leads:${ip}`, 10, 60 * 60 * 1000);
+  if (!limited.ok) {
+    return NextResponse.json(
+      { error: "rate_limited", retryAfterSec: limited.retryAfterSec },
+      { status: 429, headers: { "Retry-After": String(limited.retryAfterSec) } },
+    );
+  }
+
   const parsed = schema.safeParse(await request.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
-  const okCaptcha = await verifyRecaptcha(parsed.data.recaptchaToken);
-  if (!okCaptcha) {
-    return NextResponse.json({ error: "captcha" }, { status: 400 });
-  }
-
   const supabase = await createServerSupabase();
   if (supabase) {
-    const { error } = await supabase.from("leads").insert({
+    const { error } = await supabase.from("contact_leads").insert({
       name: parsed.data.name,
       email: parsed.data.email,
       company: parsed.data.company,

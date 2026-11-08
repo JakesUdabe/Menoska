@@ -1,3 +1,4 @@
+import { renderMenoskaEmail } from "@/lib/email/layout";
 import type { Locale } from "@/i18n/locales";
 import type { BulletinSectionCriteria } from "@/lib/and-filter";
 
@@ -63,7 +64,8 @@ export function parseNlQueryFallback(query: string): NlParseResult {
 export async function parseNlQueryWithLlm(query: string): Promise<NlParseResult> {
   const anthropic = process.env.ANTHROPIC_API_KEY;
   const gemini = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (!anthropic && !gemini) return parseNlQueryFallback(query);
+  const openai = process.env.OPENAI_API_KEY;
+  if (!anthropic && !gemini && !openai) return parseNlQueryFallback(query);
 
   const system =
     'Extrae JSON con claves companies, competitors, technologies (arrays de strings) y rationale. Sin markdown.';
@@ -87,6 +89,11 @@ export async function parseNlQueryWithLlm(query: string): Promise<NlParseResult>
     if (!res.ok) return parseNlQueryFallback(query);
     const data = (await res.json()) as { content?: Array<{ text?: string }> };
     return coerceNl(data.content?.[0]?.text);
+  }
+
+  if (openai) {
+    const text = await completeOpenAi(system, user, 800);
+    return coerceNl(text ?? undefined);
   }
 
   const res = await fetch(
@@ -121,8 +128,9 @@ export async function completeWithLlm(input: {
 }): Promise<string | null> {
   const anthropic = process.env.ANTHROPIC_API_KEY;
   const gemini = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  const openai = process.env.OPENAI_API_KEY;
   const spec = MODEL_BY_COMPLEXITY[input.complexity ?? "media"];
-  if (!anthropic && !gemini) return null;
+  if (!anthropic && !gemini && !openai) return null;
 
   if (anthropic) {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -144,6 +152,8 @@ export async function completeWithLlm(input: {
     return data.content?.[0]?.text?.trim() || null;
   }
 
+  if (openai) return completeOpenAi(input.system, input.user, spec.maxTokens);
+
   const res = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${spec.gemini}:generateContent?key=${gemini}`,
     {
@@ -160,6 +170,29 @@ export async function completeWithLlm(input: {
     candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
   };
   return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || null;
+}
+
+async function completeOpenAi(system: string, user: string, maxTokens: number): Promise<string | null> {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) return null;
+  const res = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${key}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
+      max_tokens: maxTokens,
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    }),
+  });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
+  return data.choices?.[0]?.message?.content?.trim() || null;
 }
 
 function coerceNl(raw?: string): NlParseResult {
@@ -180,33 +213,12 @@ function coerceNl(raw?: string): NlParseResult {
 }
 
 export function wrapEmailHtml(innerRows: string, locale: Locale, headerImgUrl?: string): string {
-  const header = headerImgUrl
-    ? `<tr><td align="center" style="padding:0;"><img src="${headerImgUrl}" alt="ABI News" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;" /></td></tr>`
-    : `<tr><td align="center" style="padding:24px 24px 8px;font-family:Georgia,serif;font-size:22px;color:#16324f;">ABI News</td></tr>`;
-
-  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="${locale}">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ABI News</title>
-</head>
-<body style="margin:0;padding:0;background:#f4f7fa;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f7fa;">
-    <tr>
-      <td align="center" style="padding:24px 12px;">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border-radius:8px;overflow:hidden;">
-          ${header}
-          ${innerRows}
-          <tr>
-            <td style="padding:20px 24px 28px;font-family:Arial,sans-serif;font-size:11px;color:#6b7c8a;">
-              ABI News · Vigilancia tecnológica
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+  const image = headerImgUrl
+    ? `<img src="${headerImgUrl}" alt="Menoska Consulting" width="560" style="display:block;width:100%;max-width:560px;height:auto;border:0;margin:0 0 16px;" />`
+    : "";
+  return renderMenoskaEmail({
+    lang: locale,
+    preheader: "Menoska Consulting",
+    innerHtml: `${image}${innerRows}`,
+  });
 }

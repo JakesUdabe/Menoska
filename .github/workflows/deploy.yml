@@ -1,0 +1,77 @@
+name: Despliegue Automático a Hostinger
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  web-deploy:
+    name: Compilar y desplegar
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
+    steps:
+      - name: Obtener código fuente
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Compilar proyecto (Build)
+        env:
+          # Next incrusta NEXT_PUBLIC_* en el cliente durante el build.
+          # El resto (Stripe, OpenAI, EPO, Resend, service role) se lee del .env del servidor.
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          missing=0
+          for key in NEXT_PUBLIC_SITE_URL NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY; do
+            if [ -z "${!key}" ]; then
+              echo "::error::Falta el secret $key para el build de producción."
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo "Añade los secrets en GitHub → Settings → Secrets and variables → Actions."
+            echo "Valores locales de referencia: .env.example"
+            exit 1
+          fi
+          npm run build
+
+      - name: Preparar carpeta de despliegue
+        run: |
+          mkdir -p release
+          cp package.json package-lock.json next.config.ts release/
+          cp -r public release/public
+          cp -r .next release/.next
+          rm -rf release/.next/cache
+
+      - name: Subir archivos compilados a Hostinger vía FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          local-dir: ./release/
+          server-dir: /domains/menoska-consulting.com/public_html/
+          exclude: |
+            **/.env
+            **/.env.*
+          log-level: verbose
+          timeout: 600000

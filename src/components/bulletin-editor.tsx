@@ -14,23 +14,26 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DEMO_CANDIDATES } from "@/lib/demo-data";
-import { filterByAndLogic } from "@/lib/and-filter";
-import { canUseNaturalLanguage, canUsePatents } from "@/lib/rbac";
+import { filterByAndLogic, type CandidateItem } from "@/lib/and-filter";
+import { canUseNaturalLanguage, canUsePatents, maxActiveBulletins } from "@/lib/rbac";
 import { useAuth } from "@/components/auth-provider";
+import { demoApiHeaders } from "@/lib/api/demo-headers";
 import {
   bulletinPool,
   criteriaForRecipient,
   defaultSection,
-  deleteBulletin,
   normalizeBulletin,
-  saveBulletin,
   type BulletinMode,
   type BulletinRecipient,
   type StoredBulletin,
 } from "@/lib/bulletins-store";
+import { BulletinCapError, countActiveBulletins, deleteBulletin, saveBulletin } from "@/lib/bulletins-repository";
+import { recordBulletinDelivery } from "@/lib/bulletin-deliveries-store";
+import { recordActivity } from "@/lib/activity";
 import { toast } from "sonner";
 import { withLocale } from "@/lib/paths";
 import { useLocale } from "@/i18n/provider";
+import { appendClientAiUsage } from "@/lib/ai/usage-store";
 
 function uniqueLabels(values: string[]): string[] {
   const seen = new Set<string>();
@@ -166,6 +169,9 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
   const { user } = useAuth();
   const [draft, setDraft] = useState<StoredBulletin>(() => normalizeBulletin(initial));
   const [previewEmail, setPreviewEmail] = useState(() => normalizeBulletin(initial).recipients[0]?.email ?? "");
+  const [sending, setSending] = useState(false);
+  const [newsCandidates, setNewsCandidates] = useState<CandidateItem[]>([]);
+  const [newsSearching, setNewsSearching] = useState(false);
 
   const allowNl = canUseNaturalLanguage(user?.plan);
   const allowPatents = canUsePatents(user?.plan);
@@ -173,12 +179,63 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
   const isNew = !initial.name;
   const pool = useMemo(() => bulletinPool(draft), [draft]);
 
+  const candidatePool = useMemo(() => {
+    const byId = new Map<string, CandidateItem>();
+    for (const c of DEMO_CANDIDATES) byId.set(c.id, c);
+    for (const c of newsCandidates) byId.set(c.id, c);
+    return [...byId.values()];
+  }, [newsCandidates]);
+
   const preview = useMemo(() => {
     const criteria = criteriaForRecipient(draft, draft.mode === "advanced" ? previewEmail : undefined);
-    const included = filterByAndLogic(DEMO_CANDIDATES, criteria);
-    const rejected = DEMO_CANDIDATES.filter((c) => !included.some((i) => i.id === c.id));
+    const included = filterByAndLogic(candidatePool, criteria);
+    const rejected = candidatePool.filter((c) => !included.some((i) => i.id === c.id));
     return { included, rejected };
-  }, [draft, previewEmail]);
+  }, [draft, previewEmail, candidatePool]);
+
+  async function searchNews() {
+    const q = [
+      ...pool.companies.slice(0, 3),
+      ...pool.technologies.slice(0, 3),
+      draft.nlQuery?.trim() ?? "",
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    if (!q) {
+      toast.message(t("bulletin.newsSearchNeedQuery"));
+      return;
+    }
+    setNewsSearching(true);
+    try {
+      const res = await fetch("/api/news/search", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...demoApiHeaders(user) },
+        body: JSON.stringify({ query: q, limit: 8, language: draft.language }),
+      });
+      const data = (await res.json()) as {
+        items?: Array<{ title?: string; url?: string; source?: string; snippet?: string; publishedAt?: string }>;
+        error?: string;
+      };
+      if (!res.ok) {
+        toast.error(data.error ?? t("bulletin.newsSearchError"));
+        return;
+      }
+      const mapped: CandidateItem[] = (data.items ?? []).map((item, i) => ({
+        id: `news-${Date.now()}-${i}`,
+        title: item.title ?? "Untitled",
+        body: item.snippet ?? item.title ?? "",
+        url: item.url ?? "#",
+        source: "news" as const,
+        publishedAt: item.publishedAt ?? new Date().toISOString(),
+        company: pool.companies[0],
+      }));
+      setNewsCandidates(mapped);
+      toast.success(t("bulletin.newsSearchDone").replace("{n}", String(mapped.length)));
+    } finally {
+      setNewsSearching(false);
+    }
+  }
 
   function patch(next: Partial<StoredBulletin>) {
     setDraft((current) => ({ ...current, ...next }));
@@ -280,19 +337,61 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
       toast.error(t("bulletin.nlTooShort"));
       return;
     }
+    const headers: Record<string, string> = {
+      "content-type": "application/json",
+      ...demoApiHeaders(user),
+    };
     const res = await fetch("/api/nl-query", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers,
       body: JSON.stringify({ query: draft.nlQuery }),
     });
-    const data = (await res.json()) as { companies?: string[]; technologies?: string[] };
+    const data = (await res.json()) as { companies?: string[]; technologies?: string[]; error?: string };
+    if (!res.ok) {
+      if (data.error === "plan_required") {
+        toast.error(t("bulletin.planRequired"), {
+          action: {
+            label: t("billing.upgrade"),
+            onClick: () => {
+              window.location.href = withLocale(locale, "/dashboard/facturacion");
+            },
+          },
+        });
+      } else {
+        toast.error(t("contact.validation"));
+      }
+      return;
+    }
+    if (user) {
+      appendClientAiUsage({
+        userId: user.id,
+        kind: "nl_query",
+        meta: {
+          companies: data.companies?.length ?? 0,
+          technologies: data.technologies?.length ?? 0,
+        },
+      });
+    }
     setPool({
       companies: data.companies?.length ? uniqueLabels([...pool.companies, ...data.companies]) : pool.companies,
       technologies: data.technologies?.length ? uniqueLabels([...pool.technologies, ...data.technologies]) : pool.technologies,
     });
   }
 
-  function onSave() {
+  async function ensureActiveCap(nextStatus: StoredBulletin["status"]): Promise<boolean> {
+    if (nextStatus !== "active" || !user) return true;
+    const cap = maxActiveBulletins(user.plan);
+    if (cap == null) return true;
+    const active = await countActiveBulletins(user.id);
+    const alreadyActive = draft.status === "active";
+    if (!alreadyActive && active >= cap) {
+      toast.error(t("bulletin.activeCap"));
+      return false;
+    }
+    return true;
+  }
+
+  async function onSave() {
     if (!draft.name.trim() || !draft.subject.trim()) {
       toast.error(t("contact.validation"));
       return;
@@ -301,9 +400,112 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
       toast.error(t("bulletin.needRecipients"));
       return;
     }
-    saveBulletin({ ...draft, status: draft.status === "draft" ? "active" : draft.status });
+    const nextStatus = draft.status === "draft" ? "active" : draft.status;
+    if (!(await ensureActiveCap(nextStatus))) return;
+    try {
+      await saveBulletin({ ...draft, status: nextStatus }, { plan: user?.plan });
+    } catch (err) {
+      if (err instanceof BulletinCapError) {
+        toast.error(t("bulletin.activeCap"));
+        return;
+      }
+      throw err;
+    }
     toast.success(t("bulletin.saved"));
     router.push(withLocale(locale, "/dashboard/boletines"));
+  }
+
+  async function onSendNow() {
+    if (!draft.name.trim() || !draft.subject.trim()) {
+      toast.error(t("contact.validation"));
+      return;
+    }
+    if (!draft.recipients.length) {
+      toast.error(t("bulletin.needRecipients"));
+      return;
+    }
+    const nextStatus = draft.status === "draft" ? "active" : draft.status;
+    if (!(await ensureActiveCap(nextStatus))) return;
+    let saved: StoredBulletin;
+    try {
+      saved = await saveBulletin({ ...draft, status: nextStatus }, { plan: user?.plan });
+    } catch (err) {
+      if (err instanceof BulletinCapError) {
+        toast.error(t("bulletin.activeCap"));
+        return;
+      }
+      throw err;
+    }
+    setDraft(saved);
+    setSending(true);
+    try {
+      const headers: Record<string, string> = {
+        "content-type": "application/json",
+        ...demoApiHeaders(user),
+      };
+      const res = await fetch("/api/bulletins/send", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          bulletinId: saved.id,
+          bulletin: saved,
+          orgName: user?.organizationName ?? "",
+        }),
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        demo?: boolean;
+        error?: string;
+        delivery?: {
+          bulletinId: string;
+          bulletinName: string;
+          org: string;
+          recipients: string[];
+          itemCount: number;
+          when: string;
+          status: "sent" | "demo";
+          demo: boolean;
+        };
+      };
+      if (!res.ok || !data.ok) {
+        if (user) {
+          void recordActivity({
+            organizationId: user.organizationId,
+            userId: user.id,
+            kind: "delivery_failed",
+            title: `Fallo de envío: ${draft.name}`,
+            meta: { bulletinId: draft.id, error: data.error },
+          });
+          const { pushNotification } = await import("@/lib/notifications-store");
+          pushNotification({
+            organizationId: user.organizationId,
+            userId: user.id,
+            kind: "delivery_failed",
+            title: `Envío fallido tras reintentos`,
+            body: data.error ?? t("bulletin.sendError"),
+          });
+        }
+        toast.error(data.error ?? t("bulletin.sendError"));
+        return;
+      }
+      if (data.delivery) {
+        recordBulletinDelivery(data.delivery);
+      }
+      if (user) {
+        void recordActivity({
+          organizationId: user.organizationId,
+          userId: user.id,
+          kind: "bulletin_sent",
+          title: `Boletín enviado: ${draft.name}`,
+          meta: { bulletinId: draft.id, demo: Boolean(data.demo) },
+        });
+      }
+      toast.success(data.demo ? t("bulletin.sentDemo") : t("bulletin.sent"));
+    } catch {
+      toast.error(t("bulletin.sendError"));
+    } finally {
+      setSending(false);
+    }
   }
 
   const matrixReady = pool.companies.length + pool.technologies.length > 0;
@@ -429,7 +631,7 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
             <ChipList
               values={pool.companies}
               onChange={(companies) => setPool({ companies })}
-              placeholder="Bosch"
+              placeholder="Tesla"
               hint={t("bulletin.chipHint")}
               removeLabel={t("common.delete")}
             />
@@ -561,23 +763,28 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
             <h2 className="font-semibold">{t("bulletin.preview")}</h2>
             {!allowPatents ? <p className="mt-1 text-xs text-muted-foreground">{t("bulletin.starterHint")}</p> : null}
           </div>
-          {draft.mode === "advanced" && draft.recipients.length > 0 ? (
-            <div className="w-full max-w-xs">
-              <Label htmlFor="preview-recipient">{t("bulletin.previewRecipient")}</Label>
-              <select
-                id="preview-recipient"
-                className="mt-1 flex h-9 w-full rounded-md border bg-transparent px-3 text-sm"
-                value={previewEmail}
-                onChange={(e) => setPreviewEmail(e.target.value)}
-              >
-                {draft.recipients.map((row) => (
-                  <option key={row.email} value={row.email}>
-                    {row.email}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : null}
+          <div className="flex flex-wrap items-end gap-3">
+            <Button type="button" variant="outline" size="sm" disabled={newsSearching} onClick={() => void searchNews()}>
+              {newsSearching ? t("common.loading") : t("bulletin.searchNews")}
+            </Button>
+            {draft.mode === "advanced" && draft.recipients.length > 0 ? (
+              <div className="w-full max-w-xs">
+                <Label htmlFor="preview-recipient">{t("bulletin.previewRecipient")}</Label>
+                <select
+                  id="preview-recipient"
+                  className="mt-1 flex h-9 w-full rounded-md border bg-transparent px-3 text-sm"
+                  value={previewEmail}
+                  onChange={(e) => setPreviewEmail(e.target.value)}
+                >
+                  {draft.recipients.map((row) => (
+                    <option key={row.email} value={row.email}>
+                      {row.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+          </div>
         </div>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
@@ -609,8 +816,11 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
       </section>
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={onSave}>
+        <Button type="button" onClick={() => void onSave()}>
           {t("common.save")}
+        </Button>
+        <Button type="button" variant="outline" disabled={sending} onClick={() => void onSendNow()}>
+          {sending ? t("common.loading") : t("bulletin.sendNow")}
         </Button>
         {!isNew ? (
           <Button
@@ -618,9 +828,11 @@ export function BulletinEditor({ initial }: { initial: StoredBulletin }) {
             variant="destructive"
             onClick={() => {
               if (!window.confirm(t("bulletin.delete"))) return;
-              deleteBulletin(draft.id);
-              toast.success(t("bulletin.deleted"));
-              router.push(withLocale(locale, "/dashboard/boletines"));
+              void (async () => {
+                await deleteBulletin(draft.id);
+                toast.success(t("bulletin.deleted"));
+                router.push(withLocale(locale, "/dashboard/boletines"));
+              })();
             }}
           >
             {t("bulletin.delete")}

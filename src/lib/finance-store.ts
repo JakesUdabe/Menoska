@@ -1,4 +1,5 @@
 import type { DemoOrg } from "@/lib/orgs-store";
+import { readMigratedStorage, writeStorage } from "@/lib/storage-keys";
 
 export const EXPENSE_CATEGORIES = [
   "ai",
@@ -43,9 +44,12 @@ export type PlatformInvoice = {
   createdAt: string;
 };
 
-const EXPENSES_KEY = "abi_platform_expenses";
-const INVOICES_KEY = "abi_platform_invoices";
-const SEEDED_KEY = "abi_finance_seeded_v1";
+const EXPENSES_KEY = "menoska_platform_expenses";
+const EXPENSES_OLD_KEY = "abi_platform_expenses";
+const INVOICES_KEY = "menoska_platform_invoices";
+const INVOICES_OLD_KEY = "abi_platform_invoices";
+const SEEDED_KEY = "menoska_finance_seeded_v1";
+const SEEDED_OLD_KEY = "abi_finance_seeded_v1";
 
 function pad(n: number) {
   return String(n).padStart(2, "0");
@@ -73,10 +77,10 @@ export function parseAmount(raw: string) {
   return Number.isFinite(n) ? n : NaN;
 }
 
-function readJson<T>(key: string, fallback: T): T {
+function readJson<T>(key: string, oldKey: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try {
-    const raw = localStorage.getItem(key);
+    const raw = readMigratedStorage(key, oldKey);
     if (!raw) return fallback;
     return JSON.parse(raw) as T;
   } catch {
@@ -85,7 +89,7 @@ function readJson<T>(key: string, fallback: T): T {
 }
 
 function writeJson(key: string, value: unknown) {
-  localStorage.setItem(key, JSON.stringify(value));
+  writeStorage(key, JSON.stringify(value));
 }
 
 function seedExpenses(): PlatformExpense[] {
@@ -206,18 +210,25 @@ function seedInvoices(orgs: DemoOrg[]): PlatformInvoice[] {
 
 export function ensureFinanceSeed(orgs: DemoOrg[]) {
   if (typeof window === "undefined") return;
-  if (localStorage.getItem(SEEDED_KEY)) return;
-  if (!localStorage.getItem(EXPENSES_KEY)) writeJson(EXPENSES_KEY, seedExpenses());
-  if (!localStorage.getItem(INVOICES_KEY)) writeJson(INVOICES_KEY, seedInvoices(orgs));
-  localStorage.setItem(SEEDED_KEY, "1");
+  const seeded = readMigratedStorage(SEEDED_KEY, SEEDED_OLD_KEY);
+  if (seeded) return;
+  const expenses = readMigratedStorage(EXPENSES_KEY, EXPENSES_OLD_KEY);
+  const invoices = readMigratedStorage(INVOICES_KEY, INVOICES_OLD_KEY);
+  if (!expenses) writeJson(EXPENSES_KEY, seedExpenses());
+  if (!invoices) writeJson(INVOICES_KEY, seedInvoices(orgs));
+  writeStorage(SEEDED_KEY, "1");
 }
 
 export function listExpenses(): PlatformExpense[] {
-  return readJson<PlatformExpense[]>(EXPENSES_KEY, []).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  return readJson<PlatformExpense[]>(EXPENSES_KEY, EXPENSES_OLD_KEY, []).sort(
+    (a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
+  );
 }
 
 export function listInvoices(): PlatformInvoice[] {
-  return readJson<PlatformInvoice[]>(INVOICES_KEY, []).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  return readJson<PlatformInvoice[]>(INVOICES_KEY, INVOICES_OLD_KEY, []).sort(
+    (a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt),
+  );
 }
 
 export function saveExpense(input: Omit<PlatformExpense, "id" | "createdAt"> & { id?: string }): PlatformExpense {

@@ -33,16 +33,10 @@ export default function ContactPage() {
     }
     setPending(true);
     try {
-      const recaptcha = window.grecaptcha;
-      let token = "";
-      const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-      if (siteKey && recaptcha) {
-        token = await recaptcha.execute(siteKey, { action: "contact" });
-      }
       const res = await fetch("/api/leads", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...parsed.data, recaptchaToken: token }),
+        body: JSON.stringify(parsed.data),
       });
       setStatus(res.ok ? "ok" : "err");
     } catch {
@@ -89,10 +83,4 @@ export default function ContactPage() {
       </form>
     </div>
   );
-}
-
-declare global {
-  interface Window {
-    grecaptcha?: { execute: (key: string, opts: { action: string }) => Promise<string> };
-  }
 }

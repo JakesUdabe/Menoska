@@ -11,12 +11,12 @@ export default async function AccessibilityPage({ params }: { params: Promise<{ 
       <p className="mt-2 text-sm text-muted-foreground">{t("legal.lastUpdated")}</p>
       <div className="mt-8 space-y-4 text-sm leading-relaxed text-muted-foreground">
         <p>
-          ABI News sigue WCAG 2.1 nivel AA. Eso incluye contraste de color, navegación por teclado, textos alternativos,
+          Menoska Consulting sigue WCAG 2.1 nivel AA. Eso incluye contraste de color, navegación por teclado, textos alternativos,
           etiquetas de formulario, idioma de página y un enlace de salto al contenido.
         </p>
         <p>
           El selector de idioma y el banner de cookies son operables con teclado y anuncian su propósito a lectores de
-          pantalla. Si encuentra una barrera, escríbanos a accesibilidad@abinews.com.
+          pantalla. Si encuentra una barrera, escríbanos a accesibilidad@menoska.com.
         </p>
       </div>
     </article>

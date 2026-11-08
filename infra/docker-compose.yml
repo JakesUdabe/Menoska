@@ -1,0 +1,12 @@
+services:
+  fakturabai:
+    build:
+      context: ${FAKTURABAI_CONTEXT:-../../fakturabai}
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      PYTHONPATH: /app/fakturabai
+    command: python -m fakturabai
+    volumes:
+      - ${FAKTURABAI_SECRETS_HOST:-./secrets/fakturabai}:/run/secrets/fakturabai:ro
+    restart: unless-stopped

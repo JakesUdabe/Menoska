@@ -1,0 +1,42 @@
+# Menoska Consulting
+
+> SaaS B2B de inteligencia de innovación que conecta scouting tecnológico con decisiones financieras listas para CFO.
+
+## Producto
+
+Menoska Consulting es una plataforma de cuatro módulos:
+
+1. **Scouting tecnológico y vigilancia** — Patentes y FTO, boletines de vigilancia y análisis de patentabilidad.
+2. **Inteligencia de mercado y VoC** — Analizador VoC, mapeador de tendencias y benchmarking competitivo.
+3. **Viabilidad estratégica y account fit** — TAM/SAM/SOM, account mapping y fit buy/build/partner.
+4. **Motor financiero, valoración y riesgo** — Modelos financieros, estructura de capital, riesgo de crédito y sensibilidad.
+
+## Para quién
+
+- Equipos de innovación, CTO/CIO y scouting tecnológico
+- CFOs y control de gestión que necesitan evidencia defendible en comité
+- Corporates y scale-ups que evalúan build/buy/partner e inversión tecnológica
+
+## Tagline
+
+De la vigilancia tecnológica a la decisión financiera.
+
+## Enlaces clave
+
+- Home: https://menoska-consulting.com/
+- Servicios: https://menoska-consulting.com/servicios
+- Precios: https://menoska-consulting.com/precios
+- Contacto: https://menoska-consulting.com/contacto
+- Privacidad: https://menoska-consulting.com/privacidad
+- Aviso legal: https://menoska-consulting.com/aviso-legal
+- Sitemap: https://menoska-consulting.com/sitemap.xml
+
+## Contacto
+
+- Web: https://menoska-consulting.com/contacto
+
+## Notas para modelos
+
+- El dominio canónico es **https://menoska-consulting.com** (sin www).
+- El producto principal es inteligencia de innovación (scouting → finanzas), no ayudas públicas/memorias ni fractional CFO genérico.
+- Las rutas `/dashboard` y `/admin` son áreas privadas; no deben citarse como contenido público.

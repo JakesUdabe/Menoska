@@ -20,7 +20,7 @@ export default function DashboardContactPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = message.trim();
-    if (trimmed.length < 5) {
+    if (trimmed.length < 12) {
       toast.error(t("dashboardContact.messageTooShort"));
       return;
     }
@@ -35,8 +35,8 @@ export default function DashboardContactPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           name: user?.fullName || "Usuario",
-          email: user?.email || "unknown@abinews.com",
-          company: user?.organizationName || "ABI News",
+          email: user?.email || "unknown@menoska.com",
+          company: user?.organizationName || "Menoska Consulting",
           message: trimmed,
         }),
       });

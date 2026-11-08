@@ -1,0 +1,12 @@
+{
+  "status": "operational",
+  "updatedAt": "2026-10-26T00:00:00.000Z",
+  "services": [
+    { "id": "web", "name": "Aplicación web", "status": "operational" },
+    { "id": "api", "name": "API", "status": "operational" },
+    { "id": "auth", "name": "Autenticación", "status": "operational" },
+    { "id": "bulletins", "name": "Envío de boletines", "status": "operational" },
+    { "id": "ai", "name": "Generación IA", "status": "operational" },
+    { "id": "billing", "name": "Facturación", "status": "operational" }
+  ]
+}

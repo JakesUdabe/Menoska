@@ -9,8 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { withLocale } from "@/lib/paths";
-import { findDemoInviteByToken } from "@/lib/invites-store";
-import { acceptInvite } from "@/lib/invites-repository";
+import { acceptDemoInvite, findDemoInviteByToken } from "@/lib/invites-store";
 import type { DemoProfile } from "@/lib/demo-data";
 
 type Preview = {
@@ -80,7 +79,7 @@ function InviteAcceptForm() {
     setBusy(true);
     try {
       if (demo) {
-        const result = await acceptInvite({
+        const result = acceptDemoInvite({
           token,
           firstName: firstName || undefined,
           lastName: lastName || undefined,

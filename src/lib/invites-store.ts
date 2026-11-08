@@ -80,3 +80,53 @@ export function listDemoPendingForOrg(organizationId: string): OrgInvite[] {
     (i) => i.organizationId === organizationId && !i.acceptedAt && new Date(i.expiresAt).getTime() > now,
   );
 }
+
+export function acceptDemoInvite(input: {
+  token: string;
+  firstName?: string;
+  lastName?: string;
+  password?: string;
+}) {
+  const found = findDemoInviteByToken(input.token.trim());
+  if (!found || found.acceptedAt || new Date(found.expiresAt) <= new Date()) {
+    throw new Error("invite_invalid");
+  }
+  const accepted = upsertDemoInvite({ ...found, acceptedAt: new Date().toISOString() });
+  const firstName = (input.firstName ?? "Invitado").trim() || "Invitado";
+  const lastName = (input.lastName ?? "").trim();
+  const password = (input.password ?? "demo1234").trim() || "demo1234";
+  const userId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `user-${Date.now()}`;
+  const domain = accepted.email.includes("@") ? accepted.email.split("@")[1]! : "demo.local";
+  const profile = {
+    id: userId,
+    email: accepted.email,
+    firstName,
+    lastName,
+    fullName: `${firstName} ${lastName}`.trim(),
+    role: accepted.role === "superadmin" ? ("admin" as const) : accepted.role,
+    locale: "es",
+    organizationId: accepted.organizationId,
+    organizationName: accepted.organizationName ?? "Organización",
+    organizationDomain: domain,
+    plan: "starter" as const,
+  };
+
+  if (typeof window !== "undefined") {
+    try {
+      const accountsKey = "menoska_demo_accounts";
+      const raw = localStorage.getItem(accountsKey);
+      const accounts = raw
+        ? (JSON.parse(raw) as Array<{ email: string; password: string; profile: typeof profile }>)
+        : [];
+      const existing = accounts.findIndex((a) => a.email === accepted.email);
+      const entry = { email: accepted.email, password, profile };
+      if (existing >= 0) accounts[existing] = entry;
+      else accounts.push(entry);
+      localStorage.setItem(accountsKey, JSON.stringify(accounts));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return { invite: accepted, demoAccount: { email: accepted.email, password, profile } };
+}

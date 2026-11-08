@@ -3,6 +3,7 @@ import { createAdminSupabase } from "@/lib/supabase/admin";
 import { createServerSupabase } from "@/lib/supabase/server";
 import type { AppRole, PlanType } from "@/lib/rbac";
 import {
+  acceptDemoInvite,
   findDemoInviteByToken,
   listDemoPendingForOrg,
   randomInviteToken,
@@ -172,50 +173,12 @@ export async function acceptInvite(input: {
   lastName?: string;
   password?: string;
 }): Promise<AcceptInviteResult> {
+  if (!isSupabaseConfigured()) {
+    return acceptDemoInvite(input);
+  }
+
   const invite = await getInviteByToken(input.token);
   if (!invite) throw new Error("invite_invalid");
-
-  if (!isSupabaseConfigured()) {
-    const accepted = upsertDemoInvite({ ...invite, acceptedAt: new Date().toISOString() });
-    const firstName = (input.firstName ?? "Invitado").trim() || "Invitado";
-    const lastName = (input.lastName ?? "").trim();
-    const password = (input.password ?? "demo1234").trim() || "demo1234";
-    const userId =
-      typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `user-${Date.now()}`;
-    const domain = invite.email.includes("@") ? invite.email.split("@")[1]! : "demo.local";
-    const profile = {
-      id: userId,
-      email: invite.email,
-      firstName,
-      lastName,
-      fullName: `${firstName} ${lastName}`.trim(),
-      role: invite.role === "superadmin" ? ("admin" as const) : invite.role,
-      locale: "es",
-      organizationId: invite.organizationId,
-      organizationName: invite.organizationName ?? "Organización",
-      organizationDomain: domain,
-      plan: "starter" as PlanType,
-    };
-
-    if (typeof window !== "undefined") {
-      try {
-        const accountsKey = "menoska_demo_accounts";
-        const raw = localStorage.getItem(accountsKey);
-        const accounts = raw
-          ? (JSON.parse(raw) as Array<{ email: string; password: string; profile: typeof profile }>)
-          : [];
-        const existing = accounts.findIndex((a) => a.email === invite.email);
-        const entry = { email: invite.email, password, profile };
-        if (existing >= 0) accounts[existing] = entry;
-        else accounts.push(entry);
-        localStorage.setItem(accountsKey, JSON.stringify(accounts));
-      } catch {
-        /* ignore */
-      }
-    }
-
-    return { invite: accepted, demoAccount: { email: invite.email, password, profile } };
-  }
 
   // Accepting users are not org admins yet — prefer service role for profile + invite writes.
   const admin = createAdminSupabase();

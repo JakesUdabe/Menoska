@@ -1,11 +1,23 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { supabasePublicEnv } from "./env";
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
+  const env = supabasePublicEnv();
+  const path = request.nextUrl.pathname;
+  if (!env) {
+    if (path.startsWith("/app")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/acceso";
+      return NextResponse.redirect(url);
+    }
+    return response;
+  }
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env.url,
+    env.key,
     {
       cookies: {
         getAll() {
@@ -21,7 +33,6 @@ export async function updateSession(request: NextRequest) {
   );
 
   const { data } = await supabase.auth.getUser();
-  const path = request.nextUrl.pathname;
   if (!data.user && path.startsWith("/app")) {
     const url = request.nextUrl.clone();
     url.pathname = "/acceso";

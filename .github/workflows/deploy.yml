@@ -19,7 +19,7 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - name: Instalar dependencias
@@ -50,6 +50,20 @@ jobs:
             echo "Añade los secrets en GitHub → Settings → Secrets and variables → Actions."
             echo "Valores locales de referencia: .env.example"
             exit 1
+          fi
+          url="$(printf '%s' "$NEXT_PUBLIC_SUPABASE_URL" | tr -d '[:space:]' | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//")"
+          case "$url" in
+            http://*|https://*) ;;
+            *.supabase.co|*.supabase.co/) url="https://${url%/}" ;;
+            *)
+              echo "::warning::NEXT_PUBLIC_SUPABASE_URL no empieza por https://. El build publica la web con el contenido de reserva. El valor tiene que ser https://nheyqairforzviwheyrq.supabase.co"
+              url=""
+              ;;
+          esac
+          if [ -n "$url" ]; then
+            export NEXT_PUBLIC_SUPABASE_URL="$url"
+          else
+            unset NEXT_PUBLIC_SUPABASE_URL
           fi
           npm run build
 

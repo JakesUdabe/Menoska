@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img">
+  <rect width="800" height="800" fill="#E7F4EE"/>
+  <circle cx="400" cy="300" r="120" fill="#394A51"/>
+  <path d="M180 700 C200 500 600 500 620 700" fill="#00895B"/>
+  <text x="400" y="430" text-anchor="middle" font-family="Georgia, serif" font-size="72" fill="#FBF9F4">JU</text>
+</svg>

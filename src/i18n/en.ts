@@ -1,0 +1,348 @@
+import type { Messages } from "./types";
+
+export const en: Messages = {
+  metaTitle: "Menoska Consulting · Financial leadership",
+  metaDescription:
+    "External finance leadership for technology and industrial companies. Models, treasury, capital, tax, revenue and non-dilutive funding from Zarautz.",
+  skip: "Skip to content",
+  nav: {
+    home: "Home",
+    services: "Services",
+    team: "About us",
+    contact: "Contact",
+    login: "Log in",
+    loginNote: "Sign-in is not connected yet.",
+    language: "Language",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
+  },
+  hero: {
+    kicker: "Menoska Consulting",
+    title: "The finance team your company needs",
+    lead: "We cover the finance function of technology and industrial companies, day-to-day cash, and the decisions that protect profit, liquidity and value.",
+    cta: "Talk to us",
+    imageAlt: "Sample image of a finance working desk",
+  },
+  intro:
+    "We tighten financial management so growth stays profitable, liquidity stays predictable, and funding does not force founders to give up ownership.",
+  portfolio: {
+    kicker: "Services",
+    title: "Our service portfolio",
+    more: "See more",
+  },
+  services: {
+    growth: {
+      menu: "Growth architecture",
+      title: "Growth architecture and financial models",
+      card: "Dynamic models, scenarios and unit economics so growth stays under control.",
+      lead: "We build the model management uses to decide how to grow: which scenario holds, which lever moves margin, and what pace the cash can carry.",
+      includes: [
+        "Dynamic financial models",
+        "Scenario analysis",
+        "Risk simulations",
+        "Unit economics",
+        "LTV and CAC",
+        "Growth planning",
+      ],
+      objective: "Design growth that is profitable, scalable and financially sustainable.",
+    },
+    treasury: {
+      menu: "Treasury",
+      title: "Treasury and cash flow mastery",
+      card: "Cash forecasts, liquidity and working capital, before the need arrives.",
+      lead: "Treasury becomes a calendar: collections, payments, working capital and the cash required before it runs short.",
+      includes: [
+        "Cash forecasting",
+        "Liquidity management",
+        "Working capital optimisation",
+        "Collections and payments analysis",
+        "Finance dashboards",
+        "Early view of cash needs",
+      ],
+      objective: "Improve liquidity, anticipate cash needs and optimise cash flow.",
+    },
+    capital: {
+      menu: "Capital and M&A",
+      title: "Capital engineering, fundraising and M&A",
+      card: "Valuation, due diligence and capital structure for raising, buying or selling with a number that holds.",
+      lead: "We prepare the company for a round, an acquisition or a sale: the valuation supports the deal, and the structure keeps cash and ownership in order.",
+      includes: [
+        "Company valuations",
+        "Investment readiness",
+        "Financial due diligence",
+        "Capital structuring",
+        "Fundraising",
+        "Support on M&A transactions",
+      ],
+      objective: "Improve the financial structure and open access to capital and corporate opportunities.",
+    },
+    tax: {
+      menu: "Tax and risk",
+      title: "Strategic tax and risk management",
+      card: "Corporate structure, tax and hedges that protect the value of the company.",
+      lead: "We put structure and financial risk in order. When the work needs a licensed signature, we coordinate it with the tax adviser, the law firm or the institution that must sign.",
+      includes: [
+        "Strategic tax planning",
+        "Corporate structure analysis",
+        "Financial risk management",
+        "Hedges",
+        "Incentive plans",
+        "Protection of enterprise value",
+      ],
+      objective: "Protect enterprise value, improve the tax position and reduce risk exposure.",
+    },
+    revenue: {
+      menu: "Revenue",
+      title: "Revenue and business development",
+      card: "Pricing, customer profitability and commercial expansion decided on the numbers.",
+      lead: "We connect sales with the P&L: which customer leaves margin, which price sustains growth, and which commercial spend pays back.",
+      includes: [
+        "Pricing strategy",
+        "Profitability by customer and channel",
+        "CAC and LTV analysis",
+        "Commercial optimisation",
+        "Expansion strategies",
+        "Commercial decisions based on data",
+      ],
+      objective: "Increase revenue and margins through commercial decisions based on data.",
+    },
+    funding: {
+      menu: "Non-dilutive funding",
+      title: "Non-dilutive capital and public funding",
+      card: "Grants, subsidised loans and R&D tax incentives without giving up equity.",
+      lead: "We look for money that does not dilute: grants, soft loans and R&D incentives, from eligibility through to tracking the application.",
+      includes: [
+        "Grant identification",
+        "Subsidised loans",
+        "R&D tax incentives",
+        "Eligibility analysis",
+        "Application preparation",
+        "Application follow-up",
+      ],
+      objective: "Raise public funding and other capital without diluting the owners.",
+    },
+  },
+  servicePage: {
+    includes: "What is included",
+    objective: "Objective",
+    cta: "Talk to us",
+    imageAlt: "Sample image for this service",
+  },
+  tailored: {
+    kicker: "Tailored",
+    title: "Your company’s finances, built to fit",
+    lead: "Every engagement starts from the company as it is and the company it wants to become.",
+    stats: [
+      { value: 90, prefix: "+", suffix: "%", label: "Client retention rate" },
+      { value: 4, prefix: "+", suffix: " M€", label: "Under management" },
+      { value: 1, prefix: "+", suffix: " M€", label: "Raised for our clients" },
+      { value: 10, prefix: "+", suffix: "", label: "Business plans delivered to clients" },
+    ],
+  },
+  orgs: { kicker: "Track record", title: "Organisations we have worked with" },
+  about: {
+    kicker: "About us",
+    title: "Finance leadership, with an owner’s judgement.",
+    lead: "Menoska works with technology and industrial companies from Zarautz. The partner profile opens the track record, the education and the credentials.",
+    cta: "Who we are",
+  },
+  ctaBand: {
+    title: "Write to us and we will help",
+    lead: "Tell us where cash, the round or the next plan stands. We reply from Zarautz.",
+    cta: "Go to contact",
+  },
+  teamPage: {
+    kicker: "About us",
+    title: "About us",
+    peopleTitle: "The people behind the finance function",
+    lead: "Open a profile to read the CV: experience, education and credentials.",
+    openCv: "View CV",
+    imageAlt: "Sample portrait",
+    valuesTitle: "Our values",
+    values: [
+      {
+        title: "We are good people",
+        text: "The professional side is not the only thing that matters. A business succeeds with good people who share our values. That is why we choose to work with those who let us build real, lasting relationships.",
+      },
+      {
+        title: "We want to grow together",
+        text: "We are drawn to ambition, to wanting to change the world. Working together starts with us loving your project. We put quality above quantity, so we can grow side by side for many years.",
+      },
+      {
+        title: "Your project as our own",
+        text: "We know how hard it is to build a business, and we feel your project as if it were ours, the care you put into every step. We want to walk with you and celebrate your wins with you.",
+      },
+      {
+        title: "We give weight to what matters",
+        text: "In finance, as in life, every situation is unique. That is why we offer tailored solutions for the problems that cannot wait, and help you take the best decisions.",
+      },
+    ],
+  },
+  people: {
+    jakes: {
+      role: "Founding partner",
+      bio: "Finance leadership to monetise, value and scale technology and industrial assets. FMVA®. He combines data analytics, corporate finance, intellectual property and management control.",
+      summary:
+        "Strategic and financial leader specialising in the monetisation, valuation and scalability of technology and industrial assets. Certified FMVA® (Financial Modeling & Valuation Analyst). He combines data analytics with corporate finance, intellectual property management and management control. Track record in reducing financial and legal risk and in securing more than €1.1m of strategic funding. He connects technical viability with return, for executive decisions.",
+      experience: [
+        {
+          role: "Corporate Strategy & Financial Analyst",
+          org: "CIDETEC",
+          when: "January 2025 — present",
+          text: "As FP&A and corporate strategy lead, he runs long-term financial planning, capital allocation and the positioning of R&D assets. He designs and monitors executive KPIs with Power BI and Python, reads market trends and structures non-dilutive public and private funding. He carries out freedom-to-operate analysis, IP valuation and commercial viability work to reduce risk and speed up transfer and licensing.",
+        },
+        {
+          role: "Senior Financial Strategy Consultant",
+          org: "Bantec Consultores",
+          when: "February 2024 — January 2025",
+          text: "Advised boards on capital structure, due diligence and the financial strategy of R&D investment portfolios. Structured and negotiated innovation grants, non-dilutive capital and private investment. Defined the financial governance of technology agreements and risk models that protect cash and return.",
+        },
+        {
+          role: "Doctoral Researcher",
+          org: "POLYMAT",
+          when: "September 2019 — February 2024",
+          text: "Combined doctoral research with financial operations, technology transfer and venture building. Managed laboratory budgets, procurement and funding proposals. Led business development for deeptech and biotech spin-offs at CIC biomaGUNE, with three- to five-year models and go-to-market work. Drove international expansion and technical-commercial negotiation at Cimico, reporting to the CEO.",
+        },
+      ],
+      education: [
+        {
+          title: "Master’s degree, Data Science",
+          org: "Universidad Camilo José Cela",
+          when: "September 2025 — July 2026",
+          text: "Predictive analytics and machine learning applied to corporate finance, using Python, SQL and statistical models for scenarios, capital allocation and forecasting.",
+        },
+        {
+          title: "Cum laude PhD, Applied Chemistry",
+          org: "EHU",
+          when: "September 2020 — June 2024",
+          text: "PhD awarded cum laude and funded by a European Social Fund scholarship. Data analysis, project management and international collaboration, including a research stay at Queen’s University Belfast.",
+        },
+        {
+          title: "MBA",
+          org: "UNIR",
+          when: "December 2022 — February 2024",
+          text: "Corporate finance, operations and leadership, applied to technology transfer and financial models at CIC biomaGUNE.",
+        },
+        {
+          title: "MSc, Chemistry and Polymers",
+          org: "EHU",
+          when: "2019 — 2020",
+          text: "Applied technology and the path from research into operational environments. A base for judging viability, return and risk of technology assets.",
+        },
+        {
+          title: "BSc, Chemistry",
+          org: "EHU",
+          when: "2015 — 2019",
+          text: "Quantitative method and experimentation, including a research stay at the Università degli Studi di Messina.",
+        },
+      ],
+      credentials: [
+        { title: "Capital Markets & Securities Analyst (CMSA®)", org: "Corporate Finance Institute", when: "October 2026 · 197550406" },
+        { title: "Financial Modeling & Valuation Analyst (FMVA®)", org: "Corporate Finance Institute", when: "October 2026 · 197522006" },
+        { title: "Financial Planning & Analysis Professional (FPAP)", org: "Corporate Finance Institute", when: "October 2026 · 197518818" },
+        { title: "Course in strategic patent management", org: "Mondragon Unibertsitatea", when: "May 2026" },
+        { title: "Harvard ManageMentor", org: "Harvard Business School", when: "June 2023 · 7720230601247" },
+      ],
+    },
+  },
+  cv: {
+    back: "Back to the team",
+    summary: "Profile",
+    experience: "Experience",
+    education: "Education",
+    credentials: "Credentials",
+    linkedin: "View LinkedIn",
+    imageAlt: "Sample portrait of Jakes Udabe Sánchez",
+  },
+  contact: {
+    kicker: "Contact",
+    title: "Write to us and we will help",
+    lead: "Zarautz is home. Email and phone are the direct line.",
+    place: "Where",
+    email: "Email",
+    phone: "Phone",
+    map: "Open the map",
+    name: "Name",
+    company: "Company",
+    message: "Message",
+    submit: "Send",
+    pending: "The form does not send yet. Write to us at",
+  },
+  footer: {
+    nav: "Navigation",
+    services: "Services",
+    contact: "Contact",
+    tagline: "Finance leadership for technology and industrial companies.",
+    rights: "Menoska Consulting",
+  },
+  legal: {
+    group: "Useful links",
+    notice: "Legal notice",
+    privacy: "Privacy policy",
+    cookies: "Cookie policy",
+    updated: "November 2026",
+    noticeSections: [
+      {
+        heading: "Owner",
+        text: "Menoska Consulting owns this site. The base is Zarautz, 20800, Gipuzkoa. The email is info@menoska-consulting.com and the phone is +34 688 64 76 92.",
+      },
+      {
+        heading: "Purpose",
+        text: "The site presents the finance services. The information is general. An engagement is agreed separately and does not arise from visiting these pages alone.",
+      },
+      {
+        heading: "Intellectual property",
+        text: "The text, the mark and the design belong to Menoska Consulting or are used with permission. Commercial copying needs consent.",
+      },
+      {
+        heading: "Links",
+        text: "Some links open the websites of organisations we have worked with. Those sites have their own terms.",
+      },
+      {
+        heading: "Governing law",
+        text: "This notice is read under Spanish law. For any question about the site, write to info@menoska-consulting.com.",
+      },
+    ],
+    privacySections: [
+      {
+        heading: "Controller",
+        text: "The controller is Menoska Consulting, based in Zarautz, 20800, Gipuzkoa. You can write to info@menoska-consulting.com or call +34 688 64 76 92.",
+      },
+      {
+        heading: "Data and purpose",
+        text: "If you write through the form or by email, we use your name, company, email, phone and message to reply and, if it comes to that, to prepare a professional relationship.",
+      },
+      {
+        heading: "Basis",
+        text: "The basis is your request for contact and, where relevant, steps taken before a contract.",
+      },
+      {
+        heading: "Retention and sharing",
+        text: "We keep the data for as long as it takes to handle the enquiry and, if there is an engagement, for the periods required by law. We do not sell the data. Only the providers needed for email and hosting, and authorities when the law requires it, have access.",
+      },
+      {
+        heading: "Rights",
+        text: "You can request access, rectification, erasure, restriction, objection and portability at info@menoska-consulting.com. You can also complain to the Spanish Data Protection Agency (aepd.es).",
+      },
+    ],
+    cookiesSections: [
+      {
+        heading: "What we use",
+        text: "This site does not set analytics or advertising cookies.",
+      },
+      {
+        heading: "Language",
+        text: "The language you choose is stored in your browser, in local storage, so the choice is remembered. That preference does not leave your device for that reason.",
+      },
+      {
+        heading: "How to remove it",
+        text: "You can clear the site data in your browser settings. The site will then show Spanish until you choose another language.",
+      },
+    ],
+  },
+  notFound: {
+    title: "This page is not here",
+    lead: "The link does not match a section.",
+    back: "Back to home",
+  },
+};

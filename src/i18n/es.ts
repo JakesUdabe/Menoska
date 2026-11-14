@@ -1,0 +1,353 @@
+import type { Messages } from "./types";
+
+export const es: Messages = {
+  metaTitle: "Menoska Consulting · Dirección financiera",
+  metaDescription:
+    "Dirección financiera externa para empresas tecnológicas e industriales. Modelos, tesorería, capital, fiscalidad, ingresos y financiación no dilutiva desde Zarautz.",
+  skip: "Saltar al contenido",
+  nav: {
+    home: "Inicio",
+    services: "Servicios",
+    team: "Sobre nosotros",
+    contact: "Contacto",
+    login: "Iniciar sesión",
+    loginNote: "El acceso todavía no está conectado.",
+    language: "Idioma",
+    openMenu: "Abrir el menú",
+    closeMenu: "Cerrar el menú",
+  },
+  hero: {
+    kicker: "Menoska Consulting",
+    title: "El equipo financiero que tu empresa necesita",
+    lead: "Cubrimos la dirección financiera de compañías tecnológicas e industriales, el día a día de la caja y las decisiones que protegen la rentabilidad, la liquidez y el valor.",
+    cta: "Consulta con nosotros",
+    imageAlt: "Imagen de ejemplo de una mesa de trabajo financiero",
+  },
+  intro:
+    "Optimizamos la gestión financiera para que el crecimiento sea rentable, la liquidez previsible y la financiación no obligue a ceder participación.",
+  portfolio: {
+    kicker: "Servicios",
+    title: "Nuestro portfolio de servicios",
+    more: "Ver más",
+  },
+  services: {
+    growth: {
+      menu: "Arquitectura de crecimiento",
+      title: "Arquitectura de crecimiento y modelos financieros",
+      card: "Modelos dinámicos, escenarios y unit economics para crecer con control sobre la caja y el margen.",
+      lead: "Diseñamos el modelo con el que la dirección decide cómo crecer: qué escenario es viable, qué palanca mueve el margen y qué ritmo aguanta la tesorería.",
+      includes: [
+        "Modelos financieros dinámicos",
+        "Análisis de escenarios",
+        "Simulaciones de riesgo",
+        "Unit economics",
+        "LTV y CAC",
+        "Planificación de crecimiento",
+      ],
+      objective: "Diseñar un crecimiento rentable, escalable y financieramente sostenible.",
+    },
+    treasury: {
+      menu: "Tesorería",
+      title: "Tesorería y dominio del cash flow",
+      card: "Previsión de caja, liquidez y capital circulante para anticipar lo que la empresa va a necesitar.",
+      lead: "La tesorería deja de ser un saldo y pasa a ser un calendario: cobros, pagos, circulante y la caja que hace falta antes de que falte.",
+      includes: [
+        "Previsión de tesorería",
+        "Gestión de liquidez",
+        "Optimización del capital circulante",
+        "Análisis de cobros y pagos",
+        "Dashboards financieros",
+        "Anticipación de necesidades de caja",
+      ],
+      objective: "Mejorar la liquidez, anticipar necesidades de caja y optimizar el flujo de efectivo.",
+    },
+    capital: {
+      menu: "Capital y M&A",
+      title: "Ingeniería de capital, fundraising y M&A",
+      card: "Valoración, due diligence y estructura de capital para invertir, captar o comprar con criterio.",
+      lead: "Preparamos la compañía para una ronda, una compra o una venta: el número defiende la operación y la estructura deja la caja y la participación en orden.",
+      includes: [
+        "Valoraciones de empresas",
+        "Preparación para inversión",
+        "Due diligence financiera",
+        "Estructuración de capital",
+        "Fundraising",
+        "Apoyo en operaciones de M&A",
+      ],
+      objective:
+        "Optimizar la estructura financiera y facilitar el acceso a capital y a oportunidades corporativas.",
+    },
+    tax: {
+      menu: "Fiscalidad y riesgo",
+      title: "Fiscalidad estratégica y gestión del riesgo",
+      card: "Estructura societaria, fiscalidad y coberturas para proteger el valor de la compañía.",
+      lead: "Ordenamos la estructura y los riesgos que pueden erosionar el valor. Cuando el trabajo exige firma habilitada, lo coordinamos con el asesor fiscal, el despacho o la entidad que corresponda.",
+      includes: [
+        "Planificación fiscal estratégica",
+        "Análisis de estructuras societarias",
+        "Gestión de riesgos financieros",
+        "Coberturas",
+        "Planes de incentivos",
+        "Protección del valor empresarial",
+      ],
+      objective: "Proteger el valor empresarial, optimizar la fiscalidad y reducir la exposición al riesgo.",
+    },
+    revenue: {
+      menu: "Ingresos",
+      title: "Ingresos y desarrollo de negocio",
+      card: "Precios, rentabilidad por cliente y expansión comercial decididos con los números encima de la mesa.",
+      lead: "Conectamos el comercial con la cuenta de resultados: qué cliente deja margen, qué precio sostiene el crecimiento y qué inversión comercial se recupera.",
+      includes: [
+        "Estrategia de precios",
+        "Rentabilidad por cliente y canal",
+        "Análisis de CAC y LTV",
+        "Optimización comercial",
+        "Estrategias de expansión",
+        "Decisiones comerciales basadas en datos",
+      ],
+      objective: "Incrementar ingresos y márgenes mediante decisiones comerciales basadas en datos.",
+    },
+    funding: {
+      menu: "Financiación no dilutiva",
+      title: "Capital no dilutivo y financiación pública",
+      card: "Subvenciones, préstamos bonificados e incentivos de I+D+i sin ceder participación.",
+      lead: "Buscamos el dinero que no diluye: ayudas, préstamos blandos e incentivos ligados a la I+D+i, desde la elegibilidad hasta el seguimiento de la solicitud.",
+      includes: [
+        "Identificación de subvenciones",
+        "Préstamos bonificados",
+        "Incentivos fiscales a la I+D+i",
+        "Análisis de elegibilidad",
+        "Preparación de solicitudes",
+        "Seguimiento de solicitudes",
+      ],
+      objective:
+        "Obtener financiación pública y alternativas de capital sin diluir la participación de los socios.",
+    },
+  },
+  servicePage: {
+    includes: "Qué incluye",
+    objective: "Objetivo",
+    cta: "Consulta con nosotros",
+    imageAlt: "Imagen de ejemplo del servicio",
+  },
+  tailored: {
+    kicker: "A medida",
+    title: "Las finanzas de tu empresa, trabajadas a medida",
+    lead: "Cada encargo parte de la compañía que hay hoy y de la que se quiere construir.",
+    stats: [
+      { value: 90, prefix: "+", suffix: "%", label: "De tasa de retención de clientes" },
+      { value: 4, prefix: "+", suffix: " M€", label: "Under Management" },
+      { value: 1, prefix: "+", suffix: " M€", label: "Conseguidos a nuestros clientes" },
+      { value: 10, prefix: "+", suffix: "", label: "Business Plans entregados a clientes" },
+    ],
+  },
+  orgs: {
+    kicker: "Trayectoria",
+    title: "Organizaciones en las que hemos trabajado",
+  },
+  about: {
+    kicker: "Sobre nosotros",
+    title: "Dirección financiera, con criterio de socio.",
+    lead: "Menoska acompaña a empresas tecnológicas e industriales desde Zarautz. El perfil del socio abre la trayectoria, la formación y las credenciales.",
+    cta: "Quiénes somos",
+  },
+  ctaBand: {
+    title: "Escríbenos y te ayudaremos",
+    lead: "Cuéntanos en qué punto está la caja, la ronda o el siguiente plan. Respondemos desde Zarautz.",
+    cta: "Ir a contacto",
+  },
+  teamPage: {
+    kicker: "Sobre nosotros",
+    title: "Sobre nosotros",
+    peopleTitle: "Las personas detrás de la dirección financiera",
+    lead: "El perfil abre el CV: trayectoria, formación y credenciales.",
+    openCv: "Ver CV",
+    imageAlt: "Retrato de ejemplo",
+    valuesTitle: "Nuestros valores",
+    values: [
+      {
+        title: "Somos buena gente",
+        text: "La parte profesional no es lo único importante. Creemos que el éxito de un negocio se alcanza con buenas personas que comparten nuestros valores. Por eso valoramos trabajar con quienes nos permiten construir relaciones auténticas y duraderas.",
+      },
+      {
+        title: "Queremos crecer juntos",
+        text: "Nos apasiona la ambición, querer cambiar el mundo. Por eso, un requisito para trabajar juntos es que nos encante tu proyecto. Priorizamos la calidad por encima de la cantidad, para así crecer de la mano durante muchos años.",
+      },
+      {
+        title: "Tu proyecto como nuestro",
+        text: "Sabemos perfectamente lo difícil que es montar un negocio y por eso sentimos tu proyecto como si fuera nuestro, la pasión que pones en cada paso. Queremos acompañarte en este viaje y celebrar tus logros contigo.",
+      },
+      {
+        title: "Damos importancia a lo importante",
+        text: "En las finanzas, como en la vida, cada situación es única. Por eso, te ofrecemos soluciones personalizadas para resolver tus problemas más urgentes y ayudarte a tomar las mejores decisiones.",
+      },
+    ],
+  },
+  people: {
+    jakes: {
+      role: "Socio fundador y partner",
+      bio: "Dirección financiera para monetizar, valorar y escalar activos tecnológicos e industriales. FMVA®. Une analítica de datos, finanzas corporativas, propiedad industrial y control de gestión.",
+      summary:
+        "Responsable estratégico y financiero, especializado en la monetización, la valoración y la escalabilidad de activos tecnológicos e industriales. Certificado FMVA® (Financial Modeling & Valuation Analyst). Combina analítica de datos con finanzas corporativas, gestión de propiedad industrial y control de gestión. Trayectoria en reducción de riesgo financiero y jurídico y en la obtención de más de 1,1 M€ de financiación estratégica. Conecta la viabilidad técnica con el retorno para la decisión de dirección.",
+      experience: [
+        {
+          role: "Corporate Strategy & Financial Analyst",
+          org: "CIDETEC",
+          when: "Enero de 2025 — actualidad",
+          text: "Como responsable de FP&A y estrategia corporativa, dirige la planificación financiera a largo plazo, la asignación de capital y el posicionamiento de activos de I+D. Diseña y sigue indicadores de dirección con Power BI y Python, evalúa tendencias de mercado y estructura financiación pública y privada no dilutiva. Realiza análisis de libertad de operación, valoración de propiedad industrial y viabilidad comercial para reducir riesgo y acelerar la transferencia y el licenciamiento.",
+        },
+        {
+          role: "Senior Financial Strategy Consultant",
+          org: "Bantec Consultores",
+          when: "Febrero de 2024 — enero de 2025",
+          text: "Asesoró a consejos en estructura de capital, due diligence y estrategia financiera de carteras de inversión en I+D. Estructuró y negoció ayudas a la innovación, capital no dilutivo e inversión privada. Definió el gobierno financiero de acuerdos tecnológicos y modelos de riesgo para proteger la caja y el retorno.",
+        },
+        {
+          role: "Doctoral Researcher",
+          org: "POLYMAT",
+          when: "Septiembre de 2019 — febrero de 2024",
+          text: "Combinó la investigación doctoral con la operación financiera, la transferencia y la creación de proyectos. Gestionó presupuestos de laboratorio, compras y propuestas de financiación. Impulsó el desarrollo de negocio de spin-offs deeptech y biotech en CIC biomaGUNE, con modelos a tres y cinco años y salida a mercado. Llevó la expansión internacional y la negociación técnica-comercial en Cimico, reportando al CEO.",
+        },
+      ],
+      education: [
+        {
+          title: "Máster en Data Science",
+          org: "Universidad Camilo José Cela",
+          when: "Septiembre de 2025 — julio de 2026",
+          text: "Analítica predictiva y aprendizaje automático aplicados a las finanzas corporativas, con Python, SQL y modelos estadísticos para escenarios, asignación de capital y previsión.",
+        },
+        {
+          title: "Doctorado cum laude en Química Aplicada",
+          org: "EHU",
+          when: "Septiembre de 2020 — junio de 2024",
+          text: "Doctorado con mención cum laude, financiado por una beca del Fondo Social Europeo. Análisis de datos, gestión de proyectos y colaboración internacional, incluida una estancia en Queen’s University Belfast.",
+        },
+        {
+          title: "MBA",
+          org: "UNIR",
+          when: "Diciembre de 2022 — febrero de 2024",
+          text: "Finanzas corporativas, operaciones y liderazgo. Aplicado a transferencia tecnológica y modelos financieros en CIC biomaGUNE.",
+        },
+        {
+          title: "Máster en Química y Polímeros",
+          org: "EHU",
+          when: "2019 — 2020",
+          text: "Tecnología aplicada y paso de la investigación a entornos operativos. Base para juzgar la viabilidad, el retorno y el riesgo de activos tecnológicos.",
+        },
+        {
+          title: "Grado en Química",
+          org: "EHU",
+          when: "2015 — 2019",
+          text: "Metodología cuantitativa y experimentación, con una estancia de investigación en la Università degli Studi di Messina.",
+        },
+      ],
+      credentials: [
+        { title: "Capital Markets & Securities Analyst (CMSA®)", org: "Corporate Finance Institute", when: "Octubre de 2026 · 197550406" },
+        { title: "Financial Modeling & Valuation Analyst (FMVA®)", org: "Corporate Finance Institute", when: "Octubre de 2026 · 197522006" },
+        { title: "Financial Planning & Analysis Professional (FPAP)", org: "Corporate Finance Institute", when: "Octubre de 2026 · 197518818" },
+        { title: "Curso en gestión estratégica de patentes", org: "Mondragon Unibertsitatea", when: "Mayo de 2026" },
+        { title: "Harvard ManageMentor", org: "Harvard Business School", when: "Junio de 2023 · 7720230601247" },
+      ],
+    },
+  },
+  cv: {
+    back: "Volver al equipo",
+    summary: "Perfil",
+    experience: "Experiencia",
+    education: "Formación",
+    credentials: "Credenciales",
+    linkedin: "Ver LinkedIn",
+    imageAlt: "Retrato de ejemplo de Jakes Udabe Sánchez",
+  },
+  contact: {
+    kicker: "Contacto",
+    title: "Escríbenos y te ayudaremos",
+    lead: "Zarautz es la base. El correo y el teléfono son el contacto directo.",
+    place: "Dónde",
+    email: "Correo",
+    phone: "Teléfono",
+    map: "Abrir el mapa",
+    name: "Nombre",
+    company: "Empresa",
+    message: "Mensaje",
+    submit: "Enviar",
+    pending: "El formulario todavía no envía. Escríbenos a",
+  },
+  footer: {
+    nav: "Navegación",
+    services: "Servicios",
+    contact: "Contacto",
+    tagline: "Dirección financiera para empresas tecnológicas e industriales.",
+    rights: "Menoska Consulting",
+  },
+  legal: {
+    group: "Enlaces de interés",
+    notice: "Aviso legal",
+    privacy: "Política de privacidad",
+    cookies: "Política de cookies",
+    updated: "Noviembre de 2026",
+    noticeSections: [
+      {
+        heading: "Titular",
+        text: "Menoska Consulting es el titular de este sitio. La sede está en Zarautz, 20800, Gipuzkoa. El correo es info@menoska-consulting.com y el teléfono, +34 688 64 76 92.",
+      },
+      {
+        heading: "Objeto",
+        text: "El sitio presenta los servicios de dirección financiera. La información es general. Un encargo se acuerda aparte y no nace solo por visitar estas páginas.",
+      },
+      {
+        heading: "Propiedad intelectual",
+        text: "Los textos, la marca y el diseño pertenecen a Menoska Consulting o se usan con autorización. Hace falta consentimiento para copiarlos con un fin comercial.",
+      },
+      {
+        heading: "Enlaces",
+        text: "Algunos enlaces abren la web de organizaciones con las que se ha trabajado. Esas webs tienen sus propias condiciones.",
+      },
+      {
+        heading: "Ley aplicable",
+        text: "Este aviso se interpreta conforme a la legislación española. Para cualquier cuestión sobre el sitio, escribe a info@menoska-consulting.com.",
+      },
+    ],
+    privacySections: [
+      {
+        heading: "Responsable",
+        text: "El responsable es Menoska Consulting, con sede en Zarautz, 20800, Gipuzkoa. Puedes escribir a info@menoska-consulting.com o llamar al +34 688 64 76 92.",
+      },
+      {
+        heading: "Datos y finalidad",
+        text: "Si escribes por el formulario o por correo, usamos el nombre, la empresa, el correo, el teléfono y el mensaje para responderte y, si llega el caso, preparar una relación profesional.",
+      },
+      {
+        heading: "Base",
+        text: "La base es tu solicitud de contacto y, cuando corresponda, los pasos previos a un contrato.",
+      },
+      {
+        heading: "Conservación y cesiones",
+        text: "Conservamos los datos el tiempo necesario para atender la consulta y, si hay un encargo, durante los plazos que marque la ley. No vendemos los datos. Solo acceden a ellos los proveedores imprescindibles para el correo y el alojamiento del sitio, y las autoridades cuando la ley lo exige.",
+      },
+      {
+        heading: "Derechos",
+        text: "Puedes pedir acceso, rectificación, supresión, limitación, oposición y portabilidad en info@menoska-consulting.com. También puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).",
+      },
+    ],
+    cookiesSections: [
+      {
+        heading: "Qué usamos",
+        text: "Este sitio no instala cookies de analítica ni de publicidad.",
+      },
+      {
+        heading: "Idioma",
+        text: "El idioma que eliges se guarda en tu navegador, en el almacenamiento local, para recordar la elección. Esa preferencia no sale de tu equipo por ese motivo.",
+      },
+      {
+        heading: "Cómo retirarla",
+        text: "Puedes borrar los datos del sitio desde la configuración del navegador. Si lo haces, la web volverá a mostrarse en castellano hasta que elijas otro idioma.",
+      },
+    ],
+  },
+  notFound: {
+    title: "Esta página no está",
+    lead: "El enlace no corresponde a ninguna sección.",
+    back: "Volver al inicio",
+  },
+};

@@ -172,6 +172,8 @@ ul { margin: 0; padding: 0; list-style: none; }
   padding: 0 14px;
 }
 .login-button {
+  display: inline-flex;
+  align-items: center;
   border: 0;
   background: var(--marengo);
   color: white;
@@ -475,6 +477,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 @media (max-width: 680px) {
   .cards { grid-template-columns: 1fr; }
+  .login-button { padding: 0 12px; }
   .wrap { width: min(1160px, calc(100% - 28px)); }
 }
 
@@ -498,7 +501,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .app-top {
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
+  align-items: flex-end;
   gap: 14px;
   padding: 18px 28px;
   background: white;

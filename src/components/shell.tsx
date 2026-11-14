@@ -149,6 +149,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
             </div>
+            <Link className="login-button" href="/acceso">
+              {copy.nav.login}
+            </Link>
             <button
               type="button"
               className="burger"

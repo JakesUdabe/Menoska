@@ -148,7 +148,7 @@ export const es: Messages = {
   about: {
     kicker: "Sobre nosotros",
     title: "Dirección financiera, con criterio de socio.",
-    lead: "Menoska acompaña a empresas tecnológicas e industriales desde Zarautz. El perfil del socio abre la trayectoria, la formación y las credenciales.",
+    lead: "Descubre nuestros valores, el equipo y la forma en que acompañamos cada proyecto.",
     cta: "Quiénes somos",
   },
   ctaBand: {

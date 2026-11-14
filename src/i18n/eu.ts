@@ -92,7 +92,7 @@ export const eu: Messages = {
   about: {
     kicker: "Guri buruz",
     title: "Finantza zuzendaritza, bazkidearen irizpidearekin.",
-    lead: "Menoskak enpresa teknologiko eta industrialekin egiten du lan, Zarautzetik. Bazkidearen profilak ibilbidea, prestakuntza eta kredentzialak irekitzen ditu.",
+    lead: "Ezagutu gure balioak, taldea eta proiektu bakoitza nola laguntzen dugun.",
     cta: "Nor garen",
   },
   ctaBand: {

@@ -143,7 +143,7 @@ export const en: Messages = {
   about: {
     kicker: "About us",
     title: "Finance leadership, with an owner’s judgement.",
-    lead: "Menoska works with technology and industrial companies from Zarautz. The partner profile opens the track record, the education and the credentials.",
+    lead: "Discover our values, the team and the way we work alongside each project.",
     cta: "Who we are",
   },
   ctaBand: {

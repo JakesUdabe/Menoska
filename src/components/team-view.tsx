@@ -33,7 +33,6 @@ export function TeamView() {
                   <h3>{person.name}</h3>
                   <p className="role">{profile.role}</p>
                   <p>{profile.bio}</p>
-                  <span className="card-more">{copy.teamPage.openCv}</span>
                 </div>
               </Link>
             );

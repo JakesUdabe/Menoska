@@ -1,21 +1,14 @@
 import type { Organization } from "@/data/organizations";
 
-export function OrgStrip({
-  organizations,
-  kicker,
-  title,
-}: {
-  organizations: Organization[];
-  kicker: string;
-  title: string;
-}) {
+export function OrgStrip({ organizations, kicker }: { organizations: Organization[]; kicker: string }) {
   const row = repeat(organizations, 8);
 
   return (
-    <section className="orgs" aria-labelledby="orgs-title">
+    <section className="orgs" aria-labelledby="orgs-kicker">
       <div className="wrap">
-        <p className="kicker">{kicker}</p>
-        <h2 id="orgs-title">{title}</h2>
+        <p className="kicker" id="orgs-kicker">
+          {kicker}
+        </p>
       </div>
       <div className="org-marquee">
         <div className="org-track">

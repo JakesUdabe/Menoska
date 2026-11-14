@@ -37,16 +37,15 @@ export function Home({ organizations }: { organizations: Organization[] }) {
           <p className="kicker">{copy.portfolio.kicker}</p>
           <div className="cards">
             {serviceCatalog.map((service, index) => (
-              <article key={service.id} className="card">
+              <Link key={service.id} href={`/servicios/${service.slug}`} className="card">
                 <p className="service-index">{String(index + 1).padStart(2, "0")}</p>
-                <h3>
-                  <Link href={`/servicios/${service.slug}`}>{copy.services[service.id].title}</Link>
-                </h3>
+                <h3>{copy.services[service.id].title}</h3>
                 <p>{copy.services[service.id].card}</p>
-                <Link className="card-more" href={`/servicios/${service.slug}`}>
+                <span className="card-more">
                   {copy.portfolio.more}
-                </Link>
-              </article>
+                  <span aria-hidden="true">→</span>
+                </span>
+              </Link>
             ))}
           </div>
         </div>
@@ -61,7 +60,7 @@ export function Home({ organizations }: { organizations: Organization[] }) {
         </div>
       </section>
 
-      <OrgStrip organizations={organizations} kicker={copy.orgs.kicker} title={copy.orgs.title} />
+      <OrgStrip organizations={organizations} kicker={copy.orgs.kicker} />
 
       <section className="about-band">
         <div className="wrap about-grid">

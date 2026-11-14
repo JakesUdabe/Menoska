@@ -1,7 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Home } from "@/components/home";
-import { organizations, type Organization } from "@/data/organizations";
+import type { Organization } from "@/data/organizations";
+import { loadSite } from "@/lib/content";
 
 const logoExtensions = ["svg", "png", "webp", "jpg", "jpeg"] as const;
 
@@ -13,10 +14,11 @@ function resolveLogo(id: string): string | undefined {
   return undefined;
 }
 
-export default function HomePage() {
-  const items: Organization[] = organizations.map((org) => ({
+export default async function HomePage() {
+  const site = await loadSite();
+  const items: Organization[] = site.organizations.map((org) => ({
     ...org,
-    logo: resolveLogo(org.id),
+    logo: org.logo ?? resolveLogo(org.id),
   }));
-  return <Home organizations={items} />;
+  return <Home organizations={items} heroImage={site.heroImage} aboutImage={site.aboutImage} stats={site.stats} />;
 }

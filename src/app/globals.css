@@ -475,6 +475,94 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 @media (max-width: 680px) {
   .cards { grid-template-columns: 1fr; }
-  .login-button { padding: 0 12px; }
   .wrap { width: min(1160px, calc(100% - 28px)); }
+}
+
+.app-shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; background: #f4f7f5; }
+.app-side {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px 18px;
+  background: var(--marengo-deep);
+  color: white;
+}
+.app-side .brand { color: white; }
+.app-side nav { display: grid; gap: 4px; }
+.app-side nav a { padding: 10px 12px; border-radius: 10px; color: #d5e0dc; font-weight: 650; }
+.app-side nav a:hover, .app-side nav a[aria-current="page"] { background: rgba(255, 255, 255, 0.08); color: white; }
+.app-user { margin: 0; }
+.app-user small { display: block; color: #7dcea8; font-weight: 700; }
+.app-side form { margin-top: auto; }
+.app-main { min-width: 0; }
+.app-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 14px;
+  padding: 18px 28px;
+  background: white;
+  border-bottom: 1px solid var(--line);
+}
+.app-top p { margin: 0; color: var(--muted); }
+.mode-switch { display: flex; padding: 4px; border-radius: 999px; background: var(--paper); }
+.mode-switch button, .text-button {
+  border: 0;
+  background: transparent;
+  color: var(--marengo);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.mode-switch button { padding: 8px 14px; border-radius: 999px; }
+.mode-switch button.is-on { background: var(--emerald); color: white; }
+.app-section { padding: 32px 28px 64px; }
+.app-heading, .tab-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.tab-row { margin: 18px 0 24px; }
+.tab-row a, .tab-row button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: white;
+  border: 1px solid var(--line);
+  color: var(--marengo);
+  font-weight: 700;
+}
+.tab-row a[aria-current="page"] { background: var(--emerald); border-color: var(--emerald); color: white; }
+.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.kpi-grid article, .report-doc article, .editor-form, .person-row, .user-list li {
+  padding: 20px;
+  border-radius: 18px;
+  background: white;
+  border: 1px solid var(--line);
+}
+.kpi-grid h2, .report-doc h2 { font-size: 22px; }
+.report-doc { display: grid; gap: 16px; }
+.editor-form, .stack { display: grid; gap: 14px; margin-top: 18px; }
+.editor-form label, .access-card label { display: grid; gap: 6px; font-weight: 650; color: var(--marengo); font-size: 14px; }
+.editor-form input, .editor-form textarea, .editor-form select, .access-card input, .app-top select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font: inherit;
+  color: var(--ink);
+  background: white;
+}
+.form-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.editor-photo, .logo-preview, .person-row img { width: 160px; height: 110px; object-fit: contain; background: var(--paper); border-radius: 12px; }
+.person-row { display: grid; grid-template-columns: 160px 1fr auto; gap: 16px; align-items: center; }
+.user-list { display: grid; gap: 10px; }
+.user-list li { display: flex; flex-wrap: wrap; gap: 12px 20px; }
+.repeat-block { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: var(--paper); }
+.check-line { display: flex; align-items: center; gap: 8px; }
+.form-error { color: #9b2c2c; font-weight: 700; }
+.access-page { min-height: 100vh; display: grid; place-items: center; padding: 32px 16px; background: linear-gradient(180deg, var(--paper), white); }
+.access-card { width: min(440px, 100%); display: grid; gap: 14px; padding: 28px; border-radius: 20px; background: white; border: 1px solid var(--line); }
+@media (max-width: 980px) {
+  .app-shell, .kpi-grid, .person-row, .form-row { grid-template-columns: 1fr; }
+  .app-side form { margin-top: 12px; }
+}
+@media print {
+  .app-side, .app-top, .tab-row, .editor-form { display: none; }
+  .app-shell { display: block; }
 }

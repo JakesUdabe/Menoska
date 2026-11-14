@@ -1,28 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { personBySlug } from "@/data/people";
+import type { PublicEmployee } from "@/lib/content";
 import { useLocale } from "./locale";
 
-export function CvView() {
-  const params = useParams<{ slug: string }>();
+export function CvView({ person }: { person: PublicEmployee }) {
   const { copy } = useLocale();
-  const person = personBySlug(params.slug);
-  if (!person) {
-    return (
-      <section className="page-hero">
-        <div className="wrap narrow">
-          <h1>{copy.notFound.title}</h1>
-          <p className="lead">{copy.notFound.lead}</p>
-          <Link className="btn" href="/sobre-nosotros">
-            {copy.cv.back}
-          </Link>
-        </div>
-      </section>
-    );
-  }
-  const profile = copy.people[person.id];
+  const profile = person;
 
   return (
     <article className="cv">
@@ -34,9 +18,11 @@ export function CvView() {
           <img src={person.image} alt={copy.cv.imageAlt} />
           <h1>{person.name}</h1>
           <p className="role">{profile.role}</p>
-          <a className="btn" href={person.linkedin} target="_blank" rel="noreferrer">
-            {copy.cv.linkedin}
-          </a>
+          {person.linkedin ? (
+            <a className="btn" href={person.linkedin} target="_blank" rel="noreferrer">
+              {copy.cv.linkedin}
+            </a>
+          ) : null}
         </header>
         <div>
           <section>

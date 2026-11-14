@@ -7,7 +7,17 @@ import { OrgStrip } from "./org-strip";
 import { StatRow } from "./stat-row";
 import { useLocale } from "./locale";
 
-export function Home({ organizations }: { organizations: Organization[] }) {
+export function Home({
+  organizations,
+  heroImage,
+  aboutImage,
+  stats,
+}: {
+  organizations: Organization[];
+  heroImage: string;
+  aboutImage: string;
+  stats: { value: number; prefix: string; suffix: string }[];
+}) {
   const { copy } = useLocale();
 
   return (
@@ -22,7 +32,7 @@ export function Home({ organizations }: { organizations: Organization[] }) {
               {copy.hero.cta}
             </Link>
           </div>
-          <img src="/images/hero.jpg" alt={copy.hero.imageAlt} />
+          <img src={heroImage} alt={copy.hero.imageAlt} />
         </div>
       </section>
 
@@ -56,7 +66,14 @@ export function Home({ organizations }: { organizations: Organization[] }) {
           <p className="kicker light">{copy.tailored.kicker}</p>
           <h2>{copy.tailored.title}</h2>
           <p className="lead">{copy.tailored.lead}</p>
-          <StatRow stats={copy.tailored.stats} />
+          <StatRow
+            stats={copy.tailored.stats.map((stat, index) => ({
+              label: stat.label,
+              value: stats[index]?.value ?? stat.value,
+              prefix: stats[index]?.prefix ?? stat.prefix,
+              suffix: stats[index]?.suffix ?? stat.suffix,
+            }))}
+          />
         </div>
       </section>
 
@@ -64,7 +81,7 @@ export function Home({ organizations }: { organizations: Organization[] }) {
 
       <section className="about-band">
         <div className="wrap about-grid">
-          <img src="/images/jakes.svg" alt={copy.teamPage.imageAlt} />
+          <img src={aboutImage} alt={copy.teamPage.imageAlt} />
           <div>
             <p className="kicker">{copy.about.kicker}</p>
             <h2>{copy.about.title}</h2>

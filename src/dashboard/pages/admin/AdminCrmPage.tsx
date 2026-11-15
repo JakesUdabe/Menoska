@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Plus, Pencil, Trash2, Loader2, Users, AlertTriangle,
   ArrowUpDown, ChevronLeft, ChevronRight, X, Search, Archive, GitBranch,
-  Building2, Calendar,
+  Building2, Calendar, Bot,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -42,6 +42,7 @@ import type {
   CrmLead, CrmIncident, CrmPlatformClient, LeadPhase,
   IncidentPriority, IncidentStatus,
 } from "@/dashboard/types/admin";
+import { AiSdrPanel } from "@/dashboard/pages/admin/ai-sdr/AiSdrPanel";
 import { cn } from "@/dashboard/lib/utils";
 import { normalizePlanType } from "@/dashboard/lib/plan";
 import {
@@ -196,7 +197,7 @@ export default function AdminCrmPage() {
   // CRM-only staff land on leads; keep them off superadmin-only tabs if role changes.
   useEffect(() => {
     if (superAdmin) return;
-    const allowed = crmTab === "leads" || crmTab === "pipeline";
+    const allowed = crmTab === "leads" || crmTab === "pipeline" || crmTab === "ai-sdr";
     if (!allowed) setCrmTab("leads");
   }, [superAdmin, crmTab]);
 
@@ -510,6 +511,9 @@ export default function AdminCrmPage() {
 
       <Tabs value={crmTab} onValueChange={setCrmTab} className={cn(chromeHidden && "w-full min-w-0")}>
         <TabsList className="flex flex-wrap h-auto gap-1">
+          <TabsTrigger value="ai-sdr" className="gap-2">
+            <Bot className="w-4 h-4" /> {t("admin.crm.tabAiSdr")}
+          </TabsTrigger>
           <TabsTrigger value="leads" className="gap-2">
             <Users className="w-4 h-4" /> {t("admin.crm.tabLeads", { count: visibleDirectoryLeads.length })}
           </TabsTrigger>
@@ -991,6 +995,10 @@ export default function AdminCrmPage() {
           </Card>
         </TabsContent>
         )}
+
+        <TabsContent value="ai-sdr" className="mt-4">
+          <AiSdrPanel />
+        </TabsContent>
       </Tabs>
 
       <CrmLeadWorkbench

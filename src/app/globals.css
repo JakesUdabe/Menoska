@@ -269,13 +269,16 @@ ul { margin: 0; padding: 0; list-style: none; }
   border-radius: 0;
   background: transparent;
 }
-.intro-band { padding: 18px 0 10px; }
+.intro-band { padding: 2px 0 40px; }
 .intro-band p {
-  max-width: 760px;
+  max-width: 46rem;
+  margin: 0 auto;
+  text-align: center;
+  text-wrap: balance;
   font-family: var(--serif);
-  font-size: clamp(17px, 1.5vw, 20px);
-  line-height: 1.45;
-  letter-spacing: -0.012em;
+  font-size: clamp(18px, 1.65vw, 22px);
+  line-height: 1.4;
+  letter-spacing: -0.016em;
   font-weight: 500;
   font-variant-numeric: lining-nums;
   color: var(--marengo-deep);
@@ -419,7 +422,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .values-title { margin-top: 28px; }
 
 .about-band { padding: 80px 0; }
-.about-grid img { height: 360px; background: var(--emerald-soft); }
+.about-grid img { height: 360px; background: var(--emerald-soft); object-position: center 18%; }
 .cta-band { padding: 72px 0; background: var(--emerald); color: white; }
 .cta-band p { max-width: 560px; margin-bottom: 20px; font-size: 16px; line-height: 1.5; }
 

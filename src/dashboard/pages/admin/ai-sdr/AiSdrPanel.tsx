@@ -71,7 +71,7 @@ import {
 } from "./types";
 
 /** ADAPT: dominios de correo de ESTA marca (prioridad al elegir buzón Smartlead). */
-const BRAND_MAIL_DOMAINS = ["example.com"];
+const BRAND_MAIL_DOMAINS = ["menoska-consulting.com"];
 
 function isBrandMailbox(email: string): boolean {
   const lower = email.toLowerCase();

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Home } from "@/components/home";
 import type { Organization } from "@/data/organizations";
-import { loadSite } from "@/lib/content";
+import { landingAbout, loadSite } from "@/lib/content";
 
 const logoExtensions = ["svg", "png", "webp", "jpg", "jpeg"] as const;
 
@@ -20,5 +20,12 @@ export default async function HomePage() {
     ...org,
     logo: org.logo ?? resolveLogo(org.id),
   }));
-  return <Home organizations={items} aboutImage={site.aboutImage} stats={site.stats} />;
+  return (
+    <Home
+      organizations={items}
+      heroImage={site.heroImage}
+      aboutImage={landingAbout(site.aboutImage, site.employees[0]?.image)}
+      stats={site.stats}
+    />
+  );
 }

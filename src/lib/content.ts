@@ -49,9 +49,25 @@ const fallbackPeople: PublicEmployee[] = people.map((person) => {
   };
 });
 
+const stockHero = "/images/hero.jpg";
+const stockAbout = "/images/jakes.svg";
+
+/** The cover keeps the mark unless the admin has uploaded a photo. */
+export function landingHero(url: string | null | undefined) {
+  if (!url || url === stockHero) return "/logo.svg";
+  return url;
+}
+
+/** A custom cover photo wins. Otherwise the landing shows the team photo set in admin. */
+export function landingAbout(about: string | null | undefined, person?: string | null) {
+  if (about && about !== stockAbout) return about;
+  if (person && person !== stockAbout) return person;
+  return about || stockAbout;
+}
+
 const fallback: SiteContent = {
-  heroImage: "/images/hero.jpg",
-  aboutImage: "/images/jakes.svg",
+  heroImage: stockHero,
+  aboutImage: stockAbout,
   stats: es.tailored.stats.map((stat) => ({ value: stat.value, prefix: stat.prefix, suffix: stat.suffix })),
   organizations,
   employees: fallbackPeople,

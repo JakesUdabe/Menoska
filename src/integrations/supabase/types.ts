@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       absence_requests: {
@@ -513,6 +538,210 @@ export type Database = {
         }
         Relationships: []
       }
+      sdr_campaigns: {
+        Row: {
+          agent_language: string
+          agent_prompt: string
+          calendly_url: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          metrics: Json
+          name: string
+          outreach_campaign_id: string | null
+          outreach_provider: string
+          settings: Json
+          status: string
+          target_company_sizes: string[]
+          target_countries: string[]
+          target_industries: string[]
+          target_roles: string[]
+          updated_at: string
+        }
+        Insert: {
+          agent_language?: string
+          agent_prompt?: string
+          calendly_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metrics?: Json
+          name: string
+          outreach_campaign_id?: string | null
+          outreach_provider?: string
+          settings?: Json
+          status?: string
+          target_company_sizes?: string[]
+          target_countries?: string[]
+          target_industries?: string[]
+          target_roles?: string[]
+          updated_at?: string
+        }
+        Update: {
+          agent_language?: string
+          agent_prompt?: string
+          calendly_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metrics?: Json
+          name?: string
+          outreach_campaign_id?: string | null
+          outreach_provider?: string
+          settings?: Json
+          status?: string
+          target_company_sizes?: string[]
+          target_countries?: string[]
+          target_industries?: string[]
+          target_roles?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sdr_conversations: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          external_message_id: string | null
+          id: string
+          intent: string | null
+          lead_id: string
+          message_body: string
+          sender: string
+          sentiment: string | null
+          subject: string | null
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          external_message_id?: string | null
+          id?: string
+          intent?: string | null
+          lead_id: string
+          message_body?: string
+          sender: string
+          sentiment?: string | null
+          subject?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          external_message_id?: string | null
+          id?: string
+          intent?: string | null
+          lead_id?: string
+          message_body?: string
+          sender?: string
+          sentiment?: string | null
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sdr_conversations_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "sdr_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sdr_conversations_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "sdr_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sdr_leads: {
+        Row: {
+          apollo_id: string | null
+          campaign_id: string
+          company: string | null
+          company_size: string | null
+          consent_status: string
+          country: string | null
+          created_at: string
+          crm_lead_id: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          industry: string | null
+          language: string
+          last_contacted_at: string | null
+          last_name: string | null
+          linkedin_url: string | null
+          metadata: Json
+          outreach_lead_id: string | null
+          role: string | null
+          status: string
+          unsubscribed_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          apollo_id?: string | null
+          campaign_id: string
+          company?: string | null
+          company_size?: string | null
+          consent_status?: string
+          country?: string | null
+          created_at?: string
+          crm_lead_id?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          industry?: string | null
+          language?: string
+          last_contacted_at?: string | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          metadata?: Json
+          outreach_lead_id?: string | null
+          role?: string | null
+          status?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          apollo_id?: string | null
+          campaign_id?: string
+          company?: string | null
+          company_size?: string | null
+          consent_status?: string
+          country?: string | null
+          created_at?: string
+          crm_lead_id?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          industry?: string | null
+          language?: string
+          last_contacted_at?: string | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          metadata?: Json
+          outreach_lead_id?: string | null
+          role?: string | null
+          status?: string
+          unsubscribed_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sdr_leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "sdr_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sdr_leads_crm_lead_id_fkey"
+            columns: ["crm_lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_settings: {
         Row: {
           about_image_url: string
@@ -637,6 +866,10 @@ export type Database = {
         Args: { p_contact_count: number; p_days?: number[]; p_from: string }
         Returns: string
       }
+      crm_register_outreach_contact: {
+        Args: { p_email: string; p_from?: string }
+        Returns: Json
+      }
       crm_schedule_followups: {
         Args: { p_from?: string; p_lead_id: string }
         Returns: undefined
@@ -664,6 +897,7 @@ export type Database = {
           work_email: string
         }[]
       }
+      sdr_campaign_metrics: { Args: { p_campaign_id?: string }; Returns: Json }
       search_cliente_profiles: {
         Args: { p_limit?: number; p_query?: string }
         Returns: {
@@ -882,6 +1116,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       absence_status: ["pending", "approved", "rejected"],

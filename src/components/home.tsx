@@ -1,22 +1,62 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import type { Organization } from "@/data/organizations";
 import { serviceCatalog } from "@/data/services";
+import { landingAbout, landingHero } from "@/lib/content";
+import { createPublicClient } from "@/lib/supabase/public";
 import { OrgStrip } from "./org-strip";
 import { StatRow } from "./stat-row";
 import { useLocale } from "./locale";
 
 export function Home({
   organizations,
+  heroImage,
   aboutImage,
   stats,
 }: {
   organizations: Organization[];
+  heroImage: string;
   aboutImage: string;
   stats: { value: number; prefix: string; suffix: string }[];
 }) {
   const { copy } = useLocale();
+  const [heroSrc, setHeroSrc] = useState(() => landingHero(heroImage));
+  const [aboutSrc, setAboutSrc] = useState(aboutImage);
+  const [orgs, setOrgs] = useState(organizations);
+
+  useEffect(() => {
+    const supabase = createPublicClient();
+    if (!supabase) return;
+    let cancelled = false;
+    (async () => {
+      const [settings, employees, trajectory] = await Promise.all([
+        supabase.from("site_settings").select("hero_image_url, about_image_url").eq("id", 1).maybeSingle(),
+        supabase.from("employees").select("image_url").eq("visible", true).order("sort_order").limit(1),
+        supabase.from("trajectory_items").select("name, href, logo_url, sort_order").order("sort_order"),
+      ]);
+      if (cancelled) return;
+      const person = employees.data?.[0]?.image_url as string | undefined;
+      if (settings.data) {
+        setHeroSrc(landingHero(settings.data.hero_image_url));
+        setAboutSrc(landingAbout(settings.data.about_image_url, person));
+      }
+      if (trajectory.data && trajectory.data.length > 0) {
+        setOrgs(
+          trajectory.data.map((item) => ({
+            id: item.name as string,
+            name: item.name as string,
+            href: item.href as string,
+            logo: (item.logo_url as string) || undefined,
+          })),
+        );
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <>
@@ -30,7 +70,7 @@ export function Home({
               {copy.hero.cta}
             </Link>
           </div>
-          <img className="hero-logo" src="/logo.svg" alt={copy.hero.imageAlt} />
+          <img className={heroSrc.endsWith(".svg") ? "hero-logo" : undefined} src={heroSrc} alt={copy.hero.imageAlt} />
         </div>
       </section>
 
@@ -75,11 +115,11 @@ export function Home({
         </div>
       </section>
 
-      <OrgStrip organizations={organizations} kicker={copy.orgs.kicker} />
+      <OrgStrip organizations={orgs} kicker={copy.orgs.kicker} />
 
       <section className="about-band">
         <div className="wrap about-grid">
-          <img src={aboutImage} alt={copy.teamPage.imageAlt} />
+          <img src={aboutSrc} alt={copy.teamPage.imageAlt} />
           <div>
             <p className="kicker">{copy.about.kicker}</p>
             <h2>{copy.about.title}</h2>

@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { addTrajectory, createEmployee, deleteTrajectory, inviteUser, saveCover, saveStats, updateTrajectory } from "@/app/app/actions";
 import type { PublicEmployee } from "@/lib/content";
@@ -181,7 +183,7 @@ export function AdminPanel({
                 <h2>{person.name}</h2>
                 <p>{person.role}</p>
               </div>
-              <Link className="btn btn-light" href={`/app/admin/equipo/${person.id}`}>
+              <Link className="btn btn-light" href={`/app/admin/equipo?id=${person.id}`}>
                 Editar CV
               </Link>
             </article>

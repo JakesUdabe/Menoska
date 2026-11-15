@@ -109,3 +109,10 @@ export async function loadEmployee(slug: string) {
   const site = await loadSite();
   return site.employees.find((person) => person.slug === slug) ?? null;
 }
+
+export async function employeeParams() {
+  const site = await loadSite();
+  const slugs = new Set<string>(people.map((person) => person.slug));
+  for (const person of site.employees) slugs.add(person.slug);
+  return [...slugs].map((slug) => ({ slug }));
+}

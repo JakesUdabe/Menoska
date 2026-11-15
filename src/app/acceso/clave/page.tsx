@@ -1,10 +1,12 @@
-import { PasswordForm } from "@/components/access-form";
+import { Suspense } from "react";
+import { PasswordScreen } from "./password-screen";
 
-export default async function PasswordPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const { error } = await searchParams;
+export default function PasswordPage() {
   return (
     <section className="access-page">
-      <PasswordForm error={error} />
+      <Suspense fallback={null}>
+        <PasswordScreen />
+      </Suspense>
     </section>
   );
 }

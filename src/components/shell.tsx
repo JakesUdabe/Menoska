@@ -14,6 +14,7 @@ const codes: Record<Locale, string> = { es: "ES", en: "EN", eu: "EU", ca: "CA", 
 export function Shell({ children }: { children: React.ReactNode }) {
   const { copy, locale, setLocale } = useLocale();
   const pathname = usePathname();
+  const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   const headerRef = useRef<HTMLElement>(null);
   const menuId = useId();
   const langId = useId();
@@ -38,19 +39,19 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let title = copy.metaTitle;
-    if (pathname.startsWith("/contacto")) title = `${copy.contact.title} · Menoska Consulting`;
-    else if (pathname.startsWith("/sobre-nosotros/")) {
-      const person = people.find((item) => pathname.endsWith(item.slug));
+    if (path.startsWith("/contacto")) title = `${copy.contact.title} · Menoska Consulting`;
+    else if (path.startsWith("/sobre-nosotros/")) {
+      const person = people.find((item) => path.endsWith(item.slug));
       title = person ? `${person.name} · Menoska Consulting` : copy.metaTitle;
-    } else if (pathname.startsWith("/sobre-nosotros")) title = `${copy.teamPage.title} · Menoska Consulting`;
-    else if (pathname.startsWith("/servicios/")) {
-      const service = serviceBySlug(pathname.split("/")[2] ?? "");
+    } else if (path.startsWith("/sobre-nosotros")) title = `${copy.teamPage.title} · Menoska Consulting`;
+    else if (path.startsWith("/servicios/")) {
+      const service = serviceBySlug(path.split("/")[2] ?? "");
       if (service) title = `${copy.services[service.id].title} · Menoska Consulting`;
-    } else if (pathname === "/aviso-legal") title = `${copy.legal.notice} · Menoska Consulting`;
-    else if (pathname === "/politica-privacidad") title = `${copy.legal.privacy} · Menoska Consulting`;
-    else if (pathname === "/politica-de-cookies") title = `${copy.legal.cookies} · Menoska Consulting`;
+    } else if (path === "/aviso-legal") title = `${copy.legal.notice} · Menoska Consulting`;
+    else if (path === "/politica-privacidad") title = `${copy.legal.privacy} · Menoska Consulting`;
+    else if (path === "/politica-de-cookies") title = `${copy.legal.cookies} · Menoska Consulting`;
     document.title = title;
-  }, [pathname, copy]);
+  }, [path, copy]);
 
   useEffect(() => {
     function onPointer(event: MouseEvent) {
@@ -201,17 +202,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <p className="footer-label">{copy.legal.group}</p>
             <ul>
               <li>
-                <Link href="/aviso-legal" aria-current={pathname === "/aviso-legal" ? "page" : undefined}>
+                <Link href="/aviso-legal" aria-current={path === "/aviso-legal" ? "page" : undefined}>
                   {copy.legal.notice}
                 </Link>
               </li>
               <li>
-                <Link href="/politica-privacidad" aria-current={pathname === "/politica-privacidad" ? "page" : undefined}>
+                <Link href="/politica-privacidad" aria-current={path === "/politica-privacidad" ? "page" : undefined}>
                   {copy.legal.privacy}
                 </Link>
               </li>
               <li>
-                <Link href="/politica-de-cookies" aria-current={pathname === "/politica-de-cookies" ? "page" : undefined}>
+                <Link href="/politica-de-cookies" aria-current={path === "/politica-de-cookies" ? "page" : undefined}>
                   {copy.legal.cookies}
                 </Link>
               </li>

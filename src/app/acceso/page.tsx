@@ -1,10 +1,12 @@
-import { LoginForm } from "@/components/access-form";
+import { Suspense } from "react";
+import { LoginScreen } from "./login-screen";
 
-export default async function AccessPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const { error } = await searchParams;
+export default function AccessPage() {
   return (
     <section className="access-page">
-      <LoginForm error={error} />
+      <Suspense fallback={null}>
+        <LoginScreen />
+      </Suspense>
     </section>
   );
 }

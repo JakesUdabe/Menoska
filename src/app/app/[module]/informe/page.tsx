@@ -1,22 +1,11 @@
-import { notFound } from "next/navigation";
-import { ModuleBoard } from "@/components/module-board";
-import { listEntries, moduleBySlug, workspaceContext } from "@/lib/workspace";
+import { serviceCatalog } from "@/data/services";
+import { ModuleScreen } from "@/components/module-screen";
+
+export function generateStaticParams() {
+  return serviceCatalog.map((service) => ({ module: service.slug }));
+}
 
 export default async function ReportPage({ params }: { params: Promise<{ module: string }> }) {
-  const { module: slug } = await params;
-  const current = moduleBySlug(slug);
-  if (!current) notFound();
-  const { clientId, canEdit } = await workspaceContext();
-  const entries = clientId ? await listEntries(clientId, current.id, "report") : [];
-  return (
-    <ModuleBoard
-      slug={current.slug}
-      moduleId={current.id}
-      name={current.name}
-      kind="report"
-      entries={entries}
-      canEdit={canEdit}
-      hasClient={Boolean(clientId)}
-    />
-  );
+  const { module } = await params;
+  return <ModuleScreen module={module} kind="report" />;
 }

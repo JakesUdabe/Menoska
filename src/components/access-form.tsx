@@ -1,3 +1,5 @@
+"use client";
+
 import { login, setPassword } from "@/app/acceso/actions";
 
 export function LoginForm({ error }: { error?: string }) {

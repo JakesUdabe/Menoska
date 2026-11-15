@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { logout, setWorkspace } from "@/app/app/actions";
 import type { Profile } from "@/lib/workspace";

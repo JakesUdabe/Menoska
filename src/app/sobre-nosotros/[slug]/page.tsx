@@ -1,6 +1,10 @@
 import { notFound } from "next/navigation";
 import { CvView } from "@/components/cv-view";
-import { loadEmployee } from "@/lib/content";
+import { employeeParams, loadEmployee } from "@/lib/content";
+
+export async function generateStaticParams() {
+  return employeeParams();
+}
 
 export default async function AboutCvPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

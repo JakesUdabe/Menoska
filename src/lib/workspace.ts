@@ -3,7 +3,7 @@ import { es } from "@/i18n/es";
 
 export type Profile = {
   id: string;
-  role: "admin" | "client";
+  role: "admin" | "client" | "empleado";
   first_name: string;
   last_name: string;
   nif: string | null;

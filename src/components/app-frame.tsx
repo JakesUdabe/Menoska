@@ -43,6 +43,7 @@ export function AppFrame({
             </Link>
           ))}
           {showAdmin ? <Link href="/app/admin">Admin</Link> : null}
+          {showAdmin ? <Link href="/admin">Operaciones</Link> : null}
         </nav>
         <form action={logout}>
           <button className="text-button" type="submit">

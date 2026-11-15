@@ -10,6 +10,25 @@ function go(path: string) {
   window.location.assign(path);
 }
 
+function safeNext(formData: FormData, fallback: string) {
+  const next = String(formData.get("next") ?? "").trim();
+  if (!next.startsWith("/admin/contenido") && !next.startsWith("/app/admin")) return fallback;
+  if (next.includes("://") || next.startsWith("//") || next.includes("\\")) return fallback;
+  return next;
+}
+
+function withNotice(path: string, key: "ok" | "error", value: string) {
+  const url = new URL(path, "http://local");
+  if (key === "ok") {
+    url.searchParams.set("ok", value);
+    url.searchParams.delete("error");
+  } else {
+    url.searchParams.set("error", value);
+    url.searchParams.delete("ok");
+  }
+  return `${url.pathname}${url.search}`;
+}
+
 function slugify(value: string) {
   return value
     .normalize("NFD")
@@ -131,7 +150,7 @@ export async function saveCover(formData: FormData) {
     if (url) patch.about_image_url = url;
   }
   if (Object.keys(patch).length) await supabase.from("site_settings").update(patch).eq("id", 1);
-  go("/app/admin?seccion=portada&ok=1");
+  go(withNotice(safeNext(formData, "/app/admin?seccion=portada"), "ok", "1"));
 }
 
 export async function saveStats(formData: FormData) {
@@ -146,15 +165,16 @@ export async function saveStats(formData: FormData) {
   const supabase = browserClient();
   if (!supabase) return;
   await supabase.from("site_settings").update(patch).eq("id", 1);
-  go("/app/admin?seccion=numeros&ok=1");
+  go(withNotice(safeNext(formData, "/app/admin?seccion=numeros"), "ok", "1"));
 }
 
 export async function addTrajectory(formData: FormData) {
   if (!(await requireAdmin())) return;
   const name = String(formData.get("name") ?? "").trim();
   const href = String(formData.get("href") ?? "").trim();
+  const next = safeNext(formData, "/app/admin?seccion=trayectoria");
   if (!name || !href.startsWith("http")) {
-    go("/app/admin?seccion=trayectoria&error=datos");
+    go(withNotice(next, "error", "datos"));
     return;
   }
   const file = formData.get("logo");
@@ -163,7 +183,7 @@ export async function addTrajectory(formData: FormData) {
   if (!supabase) return;
   const { count } = await supabase.from("trajectory_items").select("id", { count: "exact", head: true });
   await supabase.from("trajectory_items").insert({ name, href, logo_url: logo, sort_order: count ?? 0 });
-  go("/app/admin?seccion=trayectoria&ok=1");
+  go(withNotice(next, "ok", "1"));
 }
 
 export async function updateTrajectory(formData: FormData) {
@@ -172,8 +192,9 @@ export async function updateTrajectory(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const href = String(formData.get("href") ?? "").trim();
   const sort = Number(formData.get("sort") ?? 0);
+  const next = safeNext(formData, "/app/admin?seccion=trayectoria");
   if (!id || !name || !href.startsWith("http")) {
-    go("/app/admin?seccion=trayectoria&error=datos");
+    go(withNotice(next, "error", "datos"));
     return;
   }
   const file = formData.get("logo");
@@ -189,7 +210,7 @@ export async function updateTrajectory(formData: FormData) {
   const supabase = browserClient();
   if (!supabase) return;
   await supabase.from("trajectory_items").update(patch).eq("id", id);
-  go("/app/admin?seccion=trayectoria&ok=1");
+  go(withNotice(next, "ok", "1"));
 }
 
 export async function deleteTrajectory(formData: FormData) {
@@ -198,14 +219,15 @@ export async function deleteTrajectory(formData: FormData) {
   const supabase = browserClient();
   if (!supabase) return;
   await supabase.from("trajectory_items").delete().eq("id", id);
-  go("/app/admin?seccion=trayectoria");
+  go(safeNext(formData, "/app/admin?seccion=trayectoria"));
 }
 
 export async function createEmployee(formData: FormData) {
   if (!(await requireAdmin())) return;
   const name = String(formData.get("name") ?? "").trim();
+  const next = safeNext(formData, "/app/admin?seccion=equipo");
   if (!name) {
-    go("/app/admin?seccion=equipo&error=datos");
+    go(withNotice(next, "error", "datos"));
     return;
   }
   const supabase = browserClient();
@@ -218,7 +240,17 @@ export async function createEmployee(formData: FormData) {
     .insert({ slug, name, role: "Equipo", sort_order: taken?.length ?? 0 })
     .select("id")
     .single();
-  go(data ? `/app/admin/equipo?id=${data.id}` : "/app/admin?seccion=equipo");
+  if (!data?.id) {
+    go(next);
+    return;
+  }
+  if (next.startsWith("/admin/contenido")) {
+    const url = new URL(next, "http://local");
+    url.searchParams.set("id", data.id);
+    go(`${url.pathname}${url.search}`);
+    return;
+  }
+  go(`/app/admin/equipo?id=${data.id}`);
 }
 
 export async function saveEmployee(input: {
@@ -232,6 +264,7 @@ export async function saveEmployee(input: {
   experience: CvExperience[];
   education: CvEducation[];
   credentials: CvCredential[];
+  returnTo?: string;
 }) {
   if (!(await requireAdmin())) return;
   const supabase = browserClient();
@@ -250,26 +283,32 @@ export async function saveEmployee(input: {
       credentials: input.credentials,
     })
     .eq("id", input.id);
-  go(`/app/admin/equipo?id=${input.id}&ok=1`);
+  const requested = input.returnTo?.trim() ?? "";
+  const next =
+    requested.startsWith("/admin/contenido") || requested.startsWith("/app/admin")
+      ? requested
+      : `/app/admin/equipo?id=${input.id}`;
+  go(withNotice(next, "ok", "1"));
 }
 
 export async function saveEmployeePhoto(formData: FormData) {
   if (!(await requireAdmin())) return;
   const id = String(formData.get("id") ?? "");
+  const next = safeNext(formData, `/app/admin/equipo?id=${id}`);
   const file = formData.get("photo");
   if (!(file instanceof File) || !file.size) {
-    go(`/app/admin/equipo?id=${id}`);
+    go(next);
     return;
   }
   const url = await storeImage(file, "people");
   if (!url) {
-    go(`/app/admin/equipo?id=${id}&error=imagen`);
+    go(withNotice(next, "error", "imagen"));
     return;
   }
   const supabase = browserClient();
   if (!supabase) return;
   await supabase.from("employees").update({ image_url: url }).eq("id", id);
-  go(`/app/admin/equipo?id=${id}&ok=1`);
+  go(withNotice(next, "ok", "1"));
 }
 
 export async function deleteEmployee(formData: FormData) {
@@ -278,7 +317,7 @@ export async function deleteEmployee(formData: FormData) {
   const supabase = browserClient();
   if (!supabase) return;
   await supabase.from("employees").delete().eq("id", id);
-  go("/app/admin?seccion=equipo");
+  go(safeNext(formData, "/app/admin?seccion=equipo"));
 }
 
 export async function inviteUser(formData: FormData) {
@@ -287,11 +326,24 @@ export async function inviteUser(formData: FormData) {
   const lastName = String(formData.get("lastName") ?? "").trim();
   const nif = String(formData.get("nif") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
+  const next = safeNext(formData, "/app/admin?seccion=usuarios");
+  const role = formData.get("role") === "admin" ? "admin" : "client";
   if (!firstName || !lastName || !nif || !email.includes("@")) {
-    go("/app/admin?seccion=usuarios&error=datos");
+    go(withNotice(next, "error", "datos"));
     return;
   }
-  // El plan de Hostinger no ejecuta Node. La invitación usa la service role y Resend,
-  // que no pueden ir en el JavaScript público.
-  go("/app/admin?seccion=usuarios&error=correo");
+  const supabase = browserClient();
+  if (!supabase) {
+    go(withNotice(next, "error", "correo"));
+    return;
+  }
+  const { data, error } = await supabase.functions.invoke("invite-user", {
+    body: { firstName, lastName, nif, email, role, origin: window.location.origin },
+  });
+  const code = typeof data?.code === "string" ? data.code : "correo";
+  if (error || !data?.ok) {
+    go(withNotice(next, "error", code === "datos" || code === "existe" || code === "nif" ? code : "correo"));
+    return;
+  }
+  go(withNotice(next, "ok", "1"));
 }

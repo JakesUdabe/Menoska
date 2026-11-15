@@ -1,0 +1,67 @@
+@import "tailwindcss/theme" layer(theme);
+@import "tailwindcss/utilities" layer(utilities);
+
+@source "../../dashboard/**/*.{ts,tsx}";
+
+@theme inline {
+  --font-display: var(--font-sans), "Segoe UI", sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+.admin-root {
+  --background: #ffffff;
+  --foreground: #1c282d;
+  --card: #ffffff;
+  --card-foreground: #1c282d;
+  --popover: #ffffff;
+  --popover-foreground: #1c282d;
+  --primary: #00895b;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f6f5;
+  --secondary-foreground: #243036;
+  --muted: #f4f6f5;
+  --muted-foreground: #5c6b72;
+  --accent: #e7f4ee;
+  --accent-foreground: #046444;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
+  --border: rgba(57, 74, 81, 0.16);
+  --input: rgba(57, 74, 81, 0.22);
+  --ring: #00895b;
+  --radius: 0.5rem;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+}
+
+.admin-root h1,
+.admin-root h2,
+.admin-root h3 {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  letter-spacing: normal;
+  line-height: inherit;
+}

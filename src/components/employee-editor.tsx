@@ -4,7 +4,15 @@ import { useState } from "react";
 import { deleteEmployee, saveEmployee, saveEmployeePhoto } from "@/app/app/actions";
 import type { CvCredential, CvEducation, CvExperience, PublicEmployee } from "@/lib/content";
 
-export function EmployeeEditor({ person, notice }: { person: PublicEmployee; notice?: string }) {
+export function EmployeeEditor({
+  person,
+  notice,
+  returnTo,
+}: {
+  person: PublicEmployee;
+  notice?: string;
+  returnTo?: string;
+}) {
   const [experience, setExperience] = useState<CvExperience[]>(person.experience);
   const [education, setEducation] = useState<CvEducation[]>(person.education);
   const [credentials, setCredentials] = useState<CvCredential[]>(person.credentials);
@@ -18,6 +26,7 @@ export function EmployeeEditor({ person, notice }: { person: PublicEmployee; not
       {notice === "imagen" ? <p className="form-error">La imagen tiene que ser jpg, png, webp, gif o svg, y pesar menos de 5 MB.</p> : null}
       <form className="editor-form" action={saveEmployeePhoto}>
         <input type="hidden" name="id" value={person.id} />
+        {returnTo ? <input type="hidden" name="next" value={returnTo} /> : null}
         <img className="editor-photo" src={person.image} alt="" />
         <label>
           Foto
@@ -41,6 +50,7 @@ export function EmployeeEditor({ person, notice }: { person: PublicEmployee; not
             experience,
             education,
             credentials,
+            returnTo,
           });
         }}
       >
@@ -121,12 +131,21 @@ export function EmployeeEditor({ person, notice }: { person: PublicEmployee; not
       </form>
       <form action={deleteEmployee}>
         <input type="hidden" name="id" value={person.id} />
+        {returnTo ? <input type="hidden" name="next" value={withoutPerson(returnTo)} /> : null}
         <button className="text-button" type="submit">
           Eliminar del equipo
         </button>
       </form>
     </section>
   );
+}
+
+function withoutPerson(path: string) {
+  const url = new URL(path, "http://local");
+  url.searchParams.delete("id");
+  url.searchParams.delete("ok");
+  url.searchParams.delete("error");
+  return `${url.pathname}${url.search}`;
 }
 
 function update<T>(list: T[], setList: (next: T[]) => void, index: number, patch: Partial<T>) {

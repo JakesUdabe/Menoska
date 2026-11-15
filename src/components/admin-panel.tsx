@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { addTrajectory, createEmployee, deleteTrajectory, inviteUser, saveCover, saveStats, updateTrajectory } from "@/app/app/actions";
 import type { PublicEmployee } from "@/lib/content";
 import { es } from "@/i18n/es";
@@ -10,7 +9,7 @@ const sections = [
   { id: "portada", label: "Portada" },
   { id: "trayectoria", label: "Trayectoria" },
   { id: "numeros", label: "Números" },
-  { id: "equipo", label: "Equipo" },
+  { id: "equipo", label: "Equipo y CV" },
   { id: "usuarios", label: "Usuarios" },
 ] as const;
 
@@ -42,6 +41,7 @@ export function AdminPanel({
   trajectory,
   employees,
   users,
+  base = "/app/admin",
 }: {
   section: Section;
   notice?: string;
@@ -49,24 +49,29 @@ export function AdminPanel({
   trajectory: Trajectory[];
   employees: PublicEmployee[];
   users: Profile[];
+  base?: string;
 }) {
+  const stay = (id: Section) => `${base}?seccion=${id}`;
   return (
     <section className="app-section">
       <p className="kicker">Admin</p>
       <h1>Contenido y accesos</h1>
       <div className="tab-row">
         {sections.map((item) => (
-          <Link key={item.id} href={`/app/admin?seccion=${item.id}`} aria-current={section === item.id ? "page" : undefined}>
+          <a key={item.id} href={stay(item.id)} aria-current={section === item.id ? "page" : undefined}>
             {item.label}
-          </Link>
+          </a>
         ))}
       </div>
       {notice === "ok" ? <p className="form-note">Guardado.</p> : null}
       {notice === "datos" ? <p className="form-error">Revisa los campos. El enlace tiene que empezar por http.</p> : null}
       {notice === "correo" ? <p className="form-error">No se ha podido enviar el correo. Revisa Resend y vuelve a intentarlo.</p> : null}
+      {notice === "existe" ? <p className="form-error">Ese correo ya tiene cuenta.</p> : null}
+      {notice === "nif" ? <p className="form-error">Ese NIF ya está en uso.</p> : null}
 
       {section === "portada" ? (
         <form className="editor-form" action={saveCover}>
+          <input type="hidden" name="next" value={stay("portada")} />
           <p>Estas imágenes salen en la portada: la foto principal y la de la banda de equipo.</p>
           <img className="editor-photo" src={settings.hero_image_url} alt="" />
           <label>
@@ -86,6 +91,7 @@ export function AdminPanel({
 
       {section === "numeros" ? (
         <form className="editor-form" action={saveStats}>
+          <input type="hidden" name="next" value={stay("numeros")} />
           <p>Cifras de «Las finanzas de tu empresa, trabajadas a medida».</p>
           {[
             [1, settings.stat_1_prefix, settings.stat_1_value, settings.stat_1_suffix],
@@ -121,6 +127,7 @@ export function AdminPanel({
         <div className="stack">
           {trajectory.map((item) => (
             <form key={item.id} className="editor-form" action={updateTrajectory}>
+              <input type="hidden" name="next" value={stay("trayectoria")} />
               <input type="hidden" name="id" value={item.id} />
               {item.logo_url ? <img className="logo-preview" src={item.logo_url} alt="" /> : null}
               <div className="form-row">
@@ -152,6 +159,7 @@ export function AdminPanel({
             </form>
           ))}
           <form className="editor-form" action={addTrajectory}>
+            <input type="hidden" name="next" value={stay("trayectoria")} />
             <h2>Añadir organización</h2>
             <div className="form-row">
               <label>
@@ -183,12 +191,13 @@ export function AdminPanel({
                 <h2>{person.name}</h2>
                 <p>{person.role}</p>
               </div>
-              <Link className="btn btn-light" href={`/app/admin/equipo?id=${person.id}`}>
+              <a className="btn btn-light" href={base.startsWith("/admin/contenido") ? `${stay("equipo")}&id=${person.id}` : `/app/admin/equipo?id=${person.id}`}>
                 Editar CV
-              </Link>
+              </a>
             </article>
           ))}
           <form className="editor-form" action={createEmployee}>
+            <input type="hidden" name="next" value={stay("equipo")} />
             <h2>Nueva persona</h2>
             <label>
               Nombre y apellidos
@@ -204,6 +213,7 @@ export function AdminPanel({
       {section === "usuarios" ? (
         <div className="stack">
           <form className="editor-form" action={inviteUser}>
+            <input type="hidden" name="next" value={stay("usuarios")} />
             <h2>Crear acceso</h2>
             <p>Se envía un correo para que la persona cree su contraseña. No hay alta pública.</p>
             <div className="form-row">
@@ -245,7 +255,7 @@ export function AdminPanel({
                 </strong>
                 <span>{user.email}</span>
                 <span>{user.nif}</span>
-                <span>{user.role === "admin" ? "Admin" : "Cliente"}</span>
+                <span>{user.role === "admin" ? "Admin" : user.role === "empleado" ? "Empleado" : "Cliente"}</span>
               </li>
             ))}
           </ul>

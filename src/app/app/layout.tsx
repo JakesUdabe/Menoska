@@ -25,6 +25,10 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
         router.replace("/acceso");
         return;
       }
+      if (context.profile.role === "empleado") {
+        window.location.replace("/admin/");
+        return;
+      }
       const clients = context.profile.role === "admin" ? await listClients() : [];
       if (!cancelled) setState({ ...context, clients });
     })();

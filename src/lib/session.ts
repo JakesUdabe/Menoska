@@ -27,7 +27,7 @@ export async function getProfile(): Promise<Profile | null> {
     .select("id, role, first_name, last_name, nif, email")
     .eq("id", data.user.id)
     .maybeSingle();
-  if (!profile || (profile.role !== "admin" && profile.role !== "client")) return null;
+  if (!profile || (profile.role !== "admin" && profile.role !== "client" && profile.role !== "empleado")) return null;
   return profile as Profile;
 }
 

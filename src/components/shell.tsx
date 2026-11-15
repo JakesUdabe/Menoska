@@ -25,7 +25,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  const workspace = pathname.startsWith("/app") || pathname.startsWith("/acceso");
+  const workspace = pathname.startsWith("/app") || pathname.startsWith("/acceso") || pathname.startsWith("/admin");
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > 4);

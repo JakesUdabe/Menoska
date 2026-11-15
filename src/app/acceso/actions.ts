@@ -26,7 +26,7 @@ export async function signIn(email: string, password: string): Promise<AccessNot
     await supabase.auth.signOut();
     return "noaccess";
   }
-  go("/app/");
+  go(profile.role === "empleado" ? "/admin/" : "/app/");
   return null;
 }
 
@@ -53,5 +53,10 @@ export async function setPassword(formData: FormData) {
     return;
   }
   const { error } = await supabase.auth.updateUser({ password });
-  go(error ? "/acceso/clave?error=clave" : "/app/");
+  if (error) {
+    go("/acceso/clave?error=clave");
+    return;
+  }
+  const profile = await getProfile();
+  go(profile?.role === "empleado" ? "/admin/" : "/app/");
 }

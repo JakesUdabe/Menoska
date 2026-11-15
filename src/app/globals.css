@@ -179,7 +179,33 @@ ul { margin: 0; padding: 0; list-style: none; }
   color: white;
   padding: 0 16px;
 }
-.login-button:hover { background: var(--marengo-deep); }
+.login-button:hover, .login-button[aria-expanded="true"] { background: var(--marengo-deep); }
+.login-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 5;
+  width: min(340px, calc(100vw - 24px));
+  padding: 18px 18px 16px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(36, 48, 54, 0.12);
+}
+.login-panel[hidden] { display: none; }
+.login-panel h2 { margin: 0; font-size: 22px; }
+.login-panel-body, .login-panel form, .access-card form { display: grid; gap: 12px; }
+.access-note { color: var(--muted); font-size: 15px; }
+.link-button {
+  justify-self: start;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--emerald-deep);
+  font-weight: 700;
+  cursor: pointer;
+}
+.link-button:hover { color: var(--marengo-deep); }
 .login-note { right: 0; left: auto; width: 240px; }
 .login-note p { padding: 10px 12px; color: var(--marengo); }
 .burger {
@@ -213,6 +239,13 @@ ul { margin: 0; padding: 0; list-style: none; }
   object-fit: cover;
 }
 .hero img { height: 420px; background: var(--paper); }
+.hero img.hero-logo {
+  height: auto;
+  max-height: 380px;
+  object-fit: contain;
+  border-radius: 0;
+  background: transparent;
+}
 .intro-band { padding: 18px 0 10px; }
 .intro-band p {
   max-width: 860px;
@@ -473,11 +506,13 @@ ul { margin: 0; padding: 0; list-style: none; }
   }
   .cards { grid-template-columns: 1fr 1fr; }
   .hero img, .service-photo { height: 260px; }
+  .hero img.hero-logo { height: auto; max-height: 220px; }
 }
 
 @media (max-width: 680px) {
   .cards { grid-template-columns: 1fr; }
   .login-button { padding: 0 12px; }
+  .login-panel { position: fixed; top: calc(var(--header) + 8px); right: 12px; left: 12px; width: auto; }
   .wrap { width: min(1160px, calc(100% - 28px)); }
 }
 
@@ -541,8 +576,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .kpi-grid h2, .report-doc h2 { font-size: 22px; }
 .report-doc { display: grid; gap: 16px; }
 .editor-form, .stack { display: grid; gap: 14px; margin-top: 18px; }
-.editor-form label, .access-card label { display: grid; gap: 6px; font-weight: 650; color: var(--marengo); font-size: 14px; }
-.editor-form input, .editor-form textarea, .editor-form select, .access-card input, .app-top select {
+.editor-form label, .access-card label, .login-panel label { display: grid; gap: 6px; font-weight: 650; color: var(--marengo); font-size: 14px; }
+.editor-form input, .editor-form textarea, .editor-form select, .access-card input, .login-panel input, .app-top select {
   width: 100%;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -561,6 +596,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .form-error { color: #9b2c2c; font-weight: 700; }
 .access-page { min-height: 100vh; display: grid; place-items: center; padding: 32px 16px; background: linear-gradient(180deg, var(--paper), white); }
 .access-card { width: min(440px, 100%); display: grid; gap: 14px; padding: 28px; border-radius: 20px; background: white; border: 1px solid var(--line); }
+.access-card h1 { font-size: 32px; }
+.access-card .btn, .login-panel .btn { width: 100%; }
 @media (max-width: 980px) {
   .app-shell, .kpi-grid, .person-row, .form-row { grid-template-columns: 1fr; }
   .app-side form { margin-top: 12px; }

@@ -20,5 +20,5 @@ export default async function HomePage() {
     ...org,
     logo: org.logo ?? resolveLogo(org.id),
   }));
-  return <Home organizations={items} heroImage={site.heroImage} aboutImage={site.aboutImage} stats={site.stats} />;
+  return <Home organizations={items} aboutImage={site.aboutImage} stats={site.stats} />;
 }

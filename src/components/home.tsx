@@ -9,12 +9,10 @@ import { useLocale } from "./locale";
 
 export function Home({
   organizations,
-  heroImage,
   aboutImage,
   stats,
 }: {
   organizations: Organization[];
-  heroImage: string;
   aboutImage: string;
   stats: { value: number; prefix: string; suffix: string }[];
 }) {
@@ -32,7 +30,7 @@ export function Home({
               {copy.hero.cta}
             </Link>
           </div>
-          <img src={heroImage} alt={copy.hero.imageAlt} />
+          <img className="hero-logo" src="/logo.svg" alt={copy.hero.imageAlt} />
         </div>
       </section>
 

@@ -7,6 +7,7 @@ import { contact } from "@/data/contact";
 import { people } from "@/data/people";
 import { serviceBySlug, serviceCatalog } from "@/data/services";
 import { localeLabels, locales, type Locale } from "@/i18n/locales";
+import { LoginForm } from "./access-form";
 import { useLocale } from "./locale";
 
 const codes: Record<Locale, string> = { es: "ES", en: "EN", eu: "EU", ca: "CA", gl: "GL" };
@@ -18,10 +19,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const headerRef = useRef<HTMLElement>(null);
   const menuId = useId();
   const langId = useId();
+  const loginId = useId();
   const [stuck, setStuck] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const workspace = pathname.startsWith("/app") || pathname.startsWith("/acceso");
 
   useEffect(() => {
@@ -35,6 +38,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
     setMobile(false);
     setServicesOpen(false);
     setLangOpen(false);
+    setLoginOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -58,12 +62,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
       if (!headerRef.current?.contains(event.target as Node)) {
         setServicesOpen(false);
         setLangOpen(false);
+        setLoginOpen(false);
       }
     }
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setServicesOpen(false);
         setLangOpen(false);
+        setLoginOpen(false);
         setMobile(false);
       }
     }
@@ -107,6 +113,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 onClick={() => {
                   setServicesOpen((open) => !open);
                   setLangOpen(false);
+                  setLoginOpen(false);
                 }}
               >
                 {copy.nav.services}
@@ -138,6 +145,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 onClick={() => {
                   setLangOpen((open) => !open);
                   setServicesOpen(false);
+                  setLoginOpen(false);
                 }}
               >
                 {codes[locale]}
@@ -150,15 +158,33 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 ))}
               </div>
             </div>
-            <Link className="login-button" href="/acceso">
-              {copy.nav.login}
-            </Link>
+            <div className="nav-drop">
+              <button
+                type="button"
+                className="login-button"
+                aria-expanded={loginOpen}
+                aria-controls={loginId}
+                onClick={() => {
+                  setLoginOpen((open) => !open);
+                  setServicesOpen(false);
+                  setLangOpen(false);
+                }}
+              >
+                {copy.nav.login}
+              </button>
+              <div id={loginId} className={loginOpen ? "login-panel is-open" : "login-panel"} hidden={!loginOpen}>
+                <LoginForm variant="panel" />
+              </div>
+            </div>
             <button
               type="button"
               className="burger"
               aria-expanded={mobile}
               aria-label={mobile ? copy.nav.closeMenu : copy.nav.openMenu}
-              onClick={() => setMobile((open) => !open)}
+              onClick={() => {
+                setMobile((open) => !open);
+                setLoginOpen(false);
+              }}
             >
               <span />
               <span />

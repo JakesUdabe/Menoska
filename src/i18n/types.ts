@@ -50,6 +50,24 @@ export type Messages = {
     openMenu: string;
     closeMenu: string;
   };
+  access: {
+    kicker: string;
+    title: string;
+    email: string;
+    password: string;
+    submit: string;
+    forgot: string;
+    forgotTitle: string;
+    forgotLead: string;
+    send: string;
+    sent: string;
+    back: string;
+    invalid: string;
+    unconfirmed: string;
+    expired: string;
+    unavailable: string;
+    noaccess: string;
+  };
   hero: { kicker: string; title: string; lead: string; cta: string; imageAlt: string };
   intro: string;
   portfolio: { kicker: string; title: string; more: string };

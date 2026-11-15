@@ -8,16 +8,14 @@ on:
 jobs:
   web-deploy:
     name: Compilar y desplegar
-    runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Obtener código fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -75,17 +73,58 @@ jobs:
           cp -r .next release/.next
           rm -rf release/.next/cache
 
+      # Hostinger resetea el socket de datos (ECONNRESET). lftp reanuda por IPv4/PASV.
       - name: Subir archivos compilados a Hostinger vía FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 21
-          local-dir: ./release/
-          server-dir: /domains/menoska-consulting.com/public_html/
-          exclude: |
-            **/.env
-            **/.env.*
-          log-level: verbose
-          timeout: 600000
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y lftp
+          python3 << 'PY'
+          import os
+          from pathlib import Path
+
+          def lftp_quote(value: str) -> str:
+              escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+              return f'"{escaped}"'
+
+          server = os.environ["FTP_SERVER"].strip().rstrip("/")
+          lower = server.lower()
+          for prefix in ("ftp://", "ftps://"):
+              if lower.startswith(prefix):
+                  server = server[len(prefix):]
+                  break
+
+          username = os.environ["FTP_USERNAME"]
+          password = os.environ["FTP_PASSWORD"]
+          remote = "/domains/menoska-consulting.com/public_html"
+          lines = [
+              "set cmd:fail-exit yes",
+              "set net:timeout 30",
+              "set net:max-retries 10",
+              "set net:reconnect-interval-base 5",
+              "set net:reconnect-interval-multiplier 1",
+              'set dns:order "inet"',
+              "set ftp:passive-mode true",
+              "set ftp:prefer-epsv false",
+              "set ftp:ssl-allow true",
+              "set ssl:verify-certificate no",
+              "set xfer:clobber on",
+              f"open ftp://{server}",
+              f"user {lftp_quote(username)} {lftp_quote(password)}",
+              (
+                  "mirror --reverse --continue --verbose --parallel=2 "
+                  "--exclude-glob .env --exclude-glob .env.* "
+                  "--exclude-glob node_modules/** --exclude-glob .htaccess "
+                  f"./release {remote}"
+              ),
+              "bye",
+          ]
+          path = Path("lftp-deploy.script")
+          path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+          os.chmod(path, 0o600)
+          PY
+          lftp -f lftp-deploy.script
+          rm -f lftp-deploy.script

@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { Source_Sans_3, Source_Serif_4 } from "next/font/google";
 import { LocaleProvider } from "@/components/locale";
 import { Shell } from "@/components/shell";
 import "./globals.css";
 
-const outfit = Outfit({
+const sourceSans = Source_Sans_3({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-sans",
+});
+
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-serif",
 });
 
 export const metadata: Metadata = {
@@ -28,7 +34,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={outfit.variable}>
+    <html lang="es" className={`${sourceSans.variable} ${sourceSerif.variable}`}>
       <body>
         <LocaleProvider>
           <Shell>{children}</Shell>
